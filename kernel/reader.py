@@ -25,7 +25,7 @@ class Reader:
                 continue
             correct_sentence = wrong_sentence[:word_position[0]] + correct_word + wrong_sentence[word_position[1]:]
             data = {'correct_sentence': correct_sentence,
-                    'wrong_sentence:': wrong_sentence,
+                    'wrong_sentence': wrong_sentence,
                     'mistake_type': mistake_type,
                     'wrong_word': wrong_word,
                     'correct_word': correct_word,

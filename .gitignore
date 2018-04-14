@@ -1,4 +1,8 @@
 .idea/**
 venv/**
-*.txt
-*.out
+**.txt
+**.out
+**.bin
+**.pyc
+**.csv
+**.swp
