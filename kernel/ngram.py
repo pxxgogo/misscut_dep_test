@@ -24,6 +24,14 @@ class Ngram:
             self._deep_model = kenlm.LanguageModel("./model/ret_tuple_deep.bin")
             self._broad_model = kenlm.LanguageModel("./model/ret_tuple_broad.bin")
 
+    def get_data(self, data):
+        rets = []
+        for sub_data in data:
+            ret = self.score(*sub_data)
+            rets.append(ret)
+        return rets
+
+
     def score(self, word_0, label_0, word_1, label_1, word_2, type):
         if word_0 != "{ROOT}":
             modified_word_0 = replace_special_symbols(word_0)

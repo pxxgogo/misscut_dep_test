@@ -1,12 +1,15 @@
 import argparse
-from .ngram import Ngram
-from .reader import Reader
-from . import kernel
 import json
 import os
 
+from . import kernel
+from .ngram import Ngram
+from .reader import Reader
+from .data_container import Data_container
+
 RECORD_NUM = 50
 THRESHOLDS = (-20, -8)
+data_container = Data_container()
 
 
 def analyze_sentence(sentence):
@@ -101,8 +104,6 @@ if __name__ == "__main__":
     model_flag = args.model_flag
     statistics_name = args.statistics_name
     precision_log_name = args.precision_log_name
-
-    kernel.ngram_model = Ngram(model_flag)
     file_num = 0
     if not input_path.endswith('.out') and not input_path.endswith('.txt'):
         exit()
@@ -118,10 +119,11 @@ if __name__ == "__main__":
     precision_log_path = os.path.join(output_dir, precision_log_name)
     statistics_path = os.path.join(output_dir, statistics_name)
 
+    data_container = Data_container(log_path=log_path)
+
     reader = Reader(input_path)
 
-    global log_handle
-    log_handle = open(log_path, 'w')
+
     global csv_handle
     csv_handle = open(statistics_path, 'w')
 
