@@ -27,12 +27,13 @@ class Ngram:
     def get_data(self, data):
         rets = []
         for sub_data in data:
+            print(sub_data)
             ret = self.score(*sub_data)
             rets.append(ret)
         return rets
 
 
-    def score(self, word_0, label_0, word_1, label_1, word_2, type):
+    def score(self, type, word_0, label_0, word_1, label_1, word_2):
         if word_0 != "{ROOT}":
             modified_word_0 = replace_special_symbols(word_0)
         else:

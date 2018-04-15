@@ -5,27 +5,34 @@ RNN_TYPE = 'rnn'
 
 
 class Data_container:
-    def __init__(self, buffer_size=1, model_type="ngram", log_path="./log.txt"):
-        self._data_buffer = {'sentence_Nos': [], 'data': []}
+    def __init__(self, buffer_size=1, model_type=NGRAM_TYPE, log_path="./log.txt", statistics_path="./statistics.csv",
+                 precisions_path="precisions.csv", test_mode=1):
+        self._data_buffer = {'data_ID_tuple': [], 'data': []}
         self._buffer_length = 0
         self._scores = {}
         self._log_handle = open(log_path, 'w')
+        self._statistics_handle = open(statistics_path, 'w')
+        self._precisions_handle = open(precisions_path, 'w')
         self._buffer_size = buffer_size
         self._model_type = model_type
-        self._sentence_dict = {}
-        self._log_sentence_No = -1
+        self._main_data_dict = {}
+        self._test_mode = test_mode
+        self._data_ID_tuple = -1
         if model_type == NGRAM_TYPE:
             self.model = ngram.Ngram()
 
+
     def init_buffer(self):
-        self._data_buffer = {'sentence_Nos': [], 'data': []}
+        self._data_buffer = {'data_ID_tuple': [], 'data': []}
         self._buffer_length = 0
 
-    def close_log_handle(self):
+    def close_all_handles(self):
         self._log_handle.close()
+        self._statistics_handle.close()
+        self._precisions_handle.close()
 
-    def feed_data(self, data, sentence_No, end_flag=False):
-        self._data_buffer['sentence_Nos'].append(sentence_No)
+    def feed_data(self, data, data_ID_tuple, end_flag=False):
+        self._data_buffer['data_ID_tuple'].append(data_ID_tuple)
         self._data_buffer['data'].append(data)
         self._buffer_length += 1
         if self._buffer_length == self._buffer_size or end_flag:
@@ -36,17 +43,25 @@ class Data_container:
                 self.nn_ret_operation(rets)
             self.init_buffer()
 
-    def feed_sentence(self, sentence, sentence_No):
-        self._sentence_dict[sentence_No] = sentence
+    def feed_main_data(self, main_data, main_data_ID):
+        self._main_data_dict[main_data_ID] = main_data
 
-    def log_data(self, log_str, sentence_No):
-        if sentence_No != self._log_sentence_No:
-            self._log_handle.write("#SENTENCE: %s \n" % self._sentence_dict[sentence_No])
-            self._log_sentence_No = sentence_No
+    # data_ID_tuple: [main_data_ID, correct_or_wrong]
+    def log_data(self, log_str, data_ID_tuple):
+        if data_ID_tuple != self._data_ID_tuple:
+            if self._test_mode == 1:
+                self._log_handle.write("#SENTENCE: %s \n" % self._main_data_dict[data_ID_tuple[0]])
+            else:
+                if data_ID_tuple[1] == 0:
+                    sentence = self._main_data_dict[data_ID_tuple[0]]["correct_sentence"]
+                else:
+                    sentence = self._main_data_dict[data_ID_tuple[0]]["wrong_sentence"]
+                self._log_handle.write("#SENTENCE: %s \n" % sentence)
+            self._data_ID_tuple = data_ID_tuple
         self._log_handle.write(log_str)
 
     def ngram_ret_operation(self, rets):
-        for sentence_No, data, scores in zip(self._data_buffer['sentence_Nos'], self._data_buffer['data'], rets):
+        for data_ID_tuple, data, scores in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
             sum_score = 0
             for score_info in scores:
                 sum_score += score_info[0]
@@ -63,32 +78,36 @@ class Data_container:
                 log_str = "%s: %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
                     type_word, data[1], scores[0][0], scores[0][1], data[2], scores[1][0], scores[1][1],
                     data[3], scores[2][0], scores[2][1], sum_score)
-            self.log_data(log_str, sentence_No)
-            scores_per_sentence = self._scores.get(sentence_No, [])
+            self.log_data(log_str, data_ID_tuple)
+            data_ID_tuple_str = str(data_ID_tuple)
+            scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
             scores_per_sentence.append(scores)
-            self._scores[sentence_No] = scores_per_sentence
+            self._scores[data_ID_tuple_str] = scores_per_sentence
 
     def nn_ret_operation(self, rets):
-        for sentence_No, data, scores in zip(self._data_buffer['sentence_Nos'], self._data_buffer['data'], rets):
+        for data_ID_tuple, data, scores in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
             sum_score = 0
-            for score in scores:
-                sum_score += score
+            for score_info in scores:
+                sum_score += score_info[0]
             if data[0] == 0:
                 type_word = 'D'
             else:
                 type_word = 'B'
             if len(scores) == 6:
-                log_str = "%s: %s [%.2f] %s [%.2f] %s [%.2f] %s [%.2f] %s [%.2f] # %.2f \n" % (
-                    type_word, data[1], scores[0], data[2], scores[1],
-                    data[3], scores[2], data[4], scores[3], data[5],
-                    scores[4], sum_score)
+                log_str = "%s: %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
+                    type_word, data[1], scores[0][0], scores[0][1], data[2], scores[1][0], scores[1][1],
+                    data[3], scores[2][0], scores[2][1], data[4], scores[3][0], scores[3][1], data[5],
+                    scores[4][0], scores[4][1], sum_score)
             else:
-                log_str = "%s: %s [%.2f] %s [%.2f] %s [%.2f] # %.2f \n" % (
-                    type_word, data[1], scores[0], data[2], scores[1],
-                    data[3], scores[2], sum_score)
-            self.log_data(log_str, sentence_No)
-            scores_per_sentence = self._scores.get(sentence_No, [])
+                log_str = "%s: %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
+                    type_word, data[1], scores[0][0], scores[0][1], data[2], scores[1][0], scores[1][1],
+                    data[3], scores[2][0], scores[2][1], sum_score)
+            self.log_data(log_str, data_ID_tuple)
+            data_ID_tuple_str = str(data_ID_tuple)
+            scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
             scores_per_sentence.append(scores)
-            self._scores[sentence_No] = scores_per_sentence
+            self._scores[data_ID_tuple_str] = scores_per_sentence
 
+    def dump_csv_statistics(self):
+        pass
 

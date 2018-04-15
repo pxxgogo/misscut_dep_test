@@ -33,7 +33,7 @@ def search_beginning(lines, line_No, lines_num):
 
 
 def operate_sub_tree(type, word_0, label_0, word_1, label_1, word_2, sentence_No):
-    data = (type, word_0, label_0, word_1, label_1, word_2, sentence_No)
+    data = (type, word_0, label_0, word_1, label_1, word_2)
     data_container.feed_data(data, sentence_No)
 
 
@@ -127,12 +127,12 @@ def analyze_file(input_file_name):
     sentence_No = 0
     for line in lines:
         sentence = line.strip()
-        data_container.feed_sentence(sentence, sentence_No)
+        data_container.feed_main_data(sentence, sentence_No)
         ret = get_parsed_ret(sentence)
         tokens = get_tokens(ret)
         dependency_tree = build_dependency_tree(ret, tokens)
         # print("#Sentence: %s" % sentence)
-        parse_tree(dependency_tree, tokens, sentence_No)
+        parse_tree(dependency_tree, tokens, (sentence_No, 0))
         sentence_No += 1
 
 
