@@ -1,5 +1,6 @@
 import re
 from .model.ngram import ngram
+from .model.rnn import wrapper
 
 NGRAM_TYPE = 'ngram'
 RNN_TYPE = 'rnn'
@@ -25,6 +26,8 @@ class Data_container:
         self._data_ID_tuple = -1
         if model_type == NGRAM_TYPE:
             self.model = ngram.Ngram()
+        else:
+            self.model = wrapper.RNN_wrapper()
 
     def init_buffer(self):
         self._data_buffer = {'data_ID_tuple': [], 'data': []}
@@ -97,15 +100,10 @@ class Data_container:
                 type_word = 'D'
             else:
                 type_word = 'B'
-            if len(scores) == 6:
-                log_str = "%s: %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
-                    type_word, data[1], scores[0][0], scores[0][1], data[2], scores[1][0], scores[1][1],
-                    data[3], scores[2][0], scores[2][1], data[4], scores[3][0], scores[3][1], data[5],
-                    scores[4][0], scores[4][1], sum_score)
-            else:
-                log_str = "%s: %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
-                    type_word, data[1], scores[0][0], scores[0][1], data[2], scores[1][0], scores[1][1],
-                    data[3], scores[2][0], scores[2][1], sum_score)
+            log_str = "%s: %s %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
+                type_word, data[1], data[2], scores[0][0], scores[0][1],
+                data[3], scores[1][0], scores[1][1], data[4], scores[2][0], scores[2][1], data[5],
+                scores[3][0], scores[3][1], sum_score)
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
@@ -136,7 +134,6 @@ class Data_container:
             self._statistics_handle.write(
                 '"%s", "%s", "%s", "%s", %s\n' % (
                     "0", correct_sentence, correct_word, word_position, correct_scores_str))
-
 
     def dump_csv_precision(self):
         correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]

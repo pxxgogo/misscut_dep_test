@@ -1,3 +1,14 @@
 {
+  "batch_size": 256,
+  "output_size": 1024,
+  "hidden_size": 256,
+  "layer_num": 2,
+  "gpu_num": 1,
+  "deep_model_dir": "./model/model_deep_biRNN",
+  "broad_model_dir": "./model/model_broad_biRNN",
+  "sequence_length": 5,
+  "word_vocab_size": 216080,
+  "label_vocab_size": 48,
+  "restored_type": 0
 
 }

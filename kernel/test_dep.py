@@ -50,8 +50,12 @@ if __name__ == "__main__":
     statistics_path = os.path.join(output_dir, statistics_name)
 
     global data_container
-    data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                    statistics_path=statistics_path)
+    if model_flag == 0:
+        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
+                                    statistics_path=statistics_path, model_type='ngram')
+    else:
+        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
+                                    statistics_path=statistics_path, model_type='rnn', buffer_size=100)
     reader = Reader(input_path)
     data_No = 0
 
