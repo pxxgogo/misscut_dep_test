@@ -19,8 +19,6 @@ DEPENDENCY_ITEM_PATTERN = r'(\w+)\((\S+)-(\d+), (\S+)-(\d+)\)'
 DEPENDENCY_ITEM_COMPILER = re.compile(DEPENDENCY_ITEM_PATTERN)
 SENTENCE_MAX_LENGTH = 50
 
-data_container = None
-
 
 def search_beginning(lines, line_No, lines_num):
     while line_No < lines_num:
@@ -32,21 +30,21 @@ def search_beginning(lines, line_No, lines_num):
     return -1, None
 
 
-def operate_sub_tree(type, word_0, label_0, word_1, label_1, word_2, sentence_No):
+def operate_sub_tree(type, word_0, label_0, word_1, label_1, word_2, sentence_No, data_container):
     data = (type, word_0, label_0, word_1, label_1, word_2)
     data_container.feed_data(data, sentence_No)
 
 
-def search_pattern_1(node_No, tokens, tree, sentence_No):
+def search_pattern_1(node_No, tokens, tree, sentence_No, data_container):
     node_info = tree[node_No]
     for child_info in node_info:
         for grandchild_info in tree[child_info['child']]:
             operate_sub_tree(0, tokens[node_No]['text'], child_info['relation'],
                              tokens[child_info['child']]['text'], grandchild_info['relation'],
-                             tokens[grandchild_info['child']]['text'], sentence_No)
+                             tokens[grandchild_info['child']]['text'], sentence_No, data_container)
 
 
-def search_pattern_2(node_No, tokens, tree, sentence_No):
+def search_pattern_2(node_No, tokens, tree, sentence_No, data_container):
     node_info = tree[node_No]
     child_num = len(node_info)
     for child_1_No in range(child_num):
@@ -55,18 +53,18 @@ def search_pattern_2(node_No, tokens, tree, sentence_No):
             child_2_info = node_info[child_2_No]
             operate_sub_tree(1, tokens[node_No]['text'], child_1_info['relation'],
                              tokens[child_1_info['child']]['text'], child_2_info['relation'],
-                             tokens[child_2_info['child']]['text'], sentence_No)
+                             tokens[child_2_info['child']]['text'], sentence_No, data_container)
 
 
-def parse_node(node_No, tokens, tree, sentence_No):
-    search_pattern_1(node_No, tokens, tree, sentence_No)
-    search_pattern_2(node_No, tokens, tree, sentence_No)
+def parse_node(node_No, tokens, tree, sentence_No, data_container):
+    search_pattern_1(node_No, tokens, tree, sentence_No, data_container)
+    search_pattern_2(node_No, tokens, tree, sentence_No, data_container)
     for child_info in tree[node_No]:
-        parse_node(child_info['child'], tokens, tree, sentence_No)
+        parse_node(child_info['child'], tokens, tree, sentence_No, data_container)
 
 
-def parse_tree(tree, tokens, sentence_No):
-    parse_node(0, tokens, tree, sentence_No)
+def parse_tree(tree, tokens, sentence_No, data_container):
+    parse_node(0, tokens, tree, sentence_No, data_container)
 
 
 def get_tokens(ret_json):
@@ -121,7 +119,7 @@ def get_parsed_ret(line):
     return ret.json()["sentences"][0]
 
 
-def analyze_file(input_file_name):
+def analyze_file(input_file_name, data_container):
     with open(input_file_name) as file_handle:
         lines = file_handle.readlines()
     sentence_No = 0
@@ -132,7 +130,7 @@ def analyze_file(input_file_name):
         tokens = get_tokens(ret)
         dependency_tree = build_dependency_tree(ret, tokens)
         # print("#Sentence: %s" % sentence)
-        parse_tree(dependency_tree, tokens, (sentence_No, 0))
+        parse_tree(dependency_tree, tokens, (sentence_No, 0), data_container)
         sentence_No += 1
 
 
@@ -144,8 +142,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     output_path = args.output_path
     input_path = args.input_path
-    data_container = Data_container(log_path=output_path)
+    data_container = Data_container(log_path=output_path, test_mode=1)
     file_num = 0
     if not input_path.endswith('.out') and not input_path.endswith('.txt'):
         exit()
-    analyze_file(input_path)
+    analyze_file(input_path, data_container)

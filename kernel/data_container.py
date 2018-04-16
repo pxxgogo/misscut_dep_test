@@ -1,12 +1,17 @@
-from . import ngram
+import re
+from .model.ngram import ngram
 
 NGRAM_TYPE = 'ngram'
 RNN_TYPE = 'rnn'
+RECORD_NUM = 50
+THRESHOLDS = (-20, -8)
+
+DATA_ID_TUPLE_COMPILER = re.compile("\((\d+), (\d+)\)")
 
 
 class Data_container:
     def __init__(self, buffer_size=1, model_type=NGRAM_TYPE, log_path="./log.txt", statistics_path="./statistics.csv",
-                 precisions_path="precisions.csv", test_mode=1):
+                 precisions_path="precisions.csv", test_mode=0):
         self._data_buffer = {'data_ID_tuple': [], 'data': []}
         self._buffer_length = 0
         self._scores = {}
@@ -20,7 +25,6 @@ class Data_container:
         self._data_ID_tuple = -1
         if model_type == NGRAM_TYPE:
             self.model = ngram.Ngram()
-
 
     def init_buffer(self):
         self._data_buffer = {'data_ID_tuple': [], 'data': []}
@@ -81,7 +85,7 @@ class Data_container:
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
-            scores_per_sentence.append(scores)
+            scores_per_sentence.append(sum_score)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
     def nn_ret_operation(self, rets):
@@ -105,9 +109,58 @@ class Data_container:
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
-            scores_per_sentence.append(scores)
+            scores_per_sentence.append(sum_score)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
-    def dump_csv_statistics(self):
-        pass
+    def transform_scores_to_str(self, scores):
+        ret = ""
+        for score in scores:
+            ret += str(score) + ", "
+        return ret
 
+    def dump_csv_statistics(self):
+        if self._test_mode == 1:
+            return
+        for main_data_id, main_data in self._main_data_dict.items():
+            wrong_sentence = main_data["wrong_sentence"]
+            correct_sentence = main_data["correct_sentence"]
+            mistake_type = main_data["mistake_type"]
+            wrong_word = main_data["wrong_word"]
+            correct_word = main_data["correct_word"]
+            word_position = str(main_data["word_position"])
+            correct_scores_str = self.transform_scores_to_str(self._scores[str((main_data_id, 0))])
+            wrong_scores_str = self.transform_scores_to_str(self._scores[str((main_data_id, 1))])
+            self._statistics_handle.write(
+                '"%s", "%s", "%s", "%s", %s\n' % (
+                    mistake_type, wrong_sentence, wrong_word, word_position, wrong_scores_str))
+            self._statistics_handle.write(
+                '"%s", "%s", "%s", "%s", %s\n' % (
+                    "0", correct_sentence, correct_word, word_position, correct_scores_str))
+
+
+    def dump_csv_precision(self):
+        correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]
+        delta = float(THRESHOLDS[1] - THRESHOLDS[0]) / float(RECORD_NUM)
+        for data_ID_tuple_str, scores in self._scores.items():
+            data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
+            data_flag = int(data_ID_tuple[1])
+            min_score = min(scores)
+            threshold = THRESHOLDS[0] - delta
+            for i in range(RECORD_NUM):
+                threshold += delta
+                if min_score < threshold:
+                    if data_flag == 1:
+                        correct_nums[1][i] += 1
+                else:
+                    if data_flag == 0:
+                        correct_nums[0][i] += 1
+        output_str = ""
+        main_data_num = len(self._main_data_dict)
+        for num in correct_nums[0]:
+            precision = float(num) / main_data_num
+            output_str += str(precision) + ", "
+        output_str += "\n"
+        for num in correct_nums[1]:
+            precision = float(num) / main_data_num
+            output_str += str(precision) + ", "
+        self._precisions_handle.write(output_str)

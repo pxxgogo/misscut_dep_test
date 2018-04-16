@@ -27,7 +27,6 @@ class Ngram:
     def get_data(self, data):
         rets = []
         for sub_data in data:
-            print(sub_data)
             ret = self.score(*sub_data)
             rets.append(ret)
         return rets
