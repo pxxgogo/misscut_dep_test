@@ -2,6 +2,8 @@ import re
 
 POSITION_COMPILER = re.compile("\[(\d+),(\d+)\]")
 
+IGNORE_TYPES = ["3-1", "3-2"]
+
 class Reader:
     def __init__(self, file_path):
         with open(file_path) as file_handle:
@@ -10,12 +12,16 @@ class Reader:
 
     def parse_data(self, raw_datas):
         self.__datas = []
+        # print(raw_datas)
         for line in raw_datas:
             items = line.strip().split("\t")
+            # print(items)
             if len(items) < 7:
                 continue
             wrong_sentence = items[0]
             mistake_type = items[1]
+            if mistake_type in IGNORE_TYPES:
+                continue
             wrong_word = items[2]
             correct_word = items[4]
             word_position_str = POSITION_COMPILER.findall(items[5])[0]

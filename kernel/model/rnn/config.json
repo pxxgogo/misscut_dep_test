@@ -8,7 +8,5 @@
   "broad_model_dir": "./model/model_broad_biRNN",
   "sequence_length": 5,
   "word_vocab_size": 216080,
-  "label_vocab_size": 48,
-  "restored_type": 0
-
+  "label_vocab_size": 48
 }

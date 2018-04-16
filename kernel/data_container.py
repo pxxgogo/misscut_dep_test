@@ -50,6 +50,17 @@ class Data_container:
                 self.nn_ret_operation(rets)
             self.init_buffer()
 
+    def feed_data_forced(self):
+        if self._buffer_length == 0:
+            return
+        rets = self.model.get_data(self._data_buffer['data'])
+        if self._model_type == NGRAM_TYPE:
+            self.ngram_ret_operation(rets)
+        else:
+            self.nn_ret_operation(rets)
+        self.init_buffer()
+
+
     def feed_main_data(self, main_data, main_data_ID):
         self._main_data_dict[main_data_ID] = main_data
 
@@ -94,20 +105,34 @@ class Data_container:
     def nn_ret_operation(self, rets):
         for data_ID_tuple, data, scores in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
             sum_score = 0
+            oov_flag = False
+            print_flag = False
+            min_score = 100
             for score_info in scores:
+                if score_info[1]:
+                    oov_flag = True
+                else:
+                    if score_info[0] < -10:
+                        print_flag = True
+                    if score_info[0] < min_score:
+                        min_score = score_info[0]
                 sum_score += score_info[0]
+            if oov_flag :
+                continue
             if data[0] == 0:
                 type_word = 'D'
             else:
                 type_word = 'B'
+
             log_str = "%s: %s %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
                 type_word, data[1], data[2], scores[0][0], scores[0][1],
                 data[3], scores[1][0], scores[1][1], data[4], scores[2][0], scores[2][1], data[5],
                 scores[3][0], scores[3][1], sum_score)
-            self.log_data(log_str, data_ID_tuple)
+            if sum_score < 0 and print_flag:
+                self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
-            scores_per_sentence.append(sum_score)
+            scores_per_sentence.append(min_score)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
     def transform_scores_to_str(self, scores):
@@ -126,8 +151,8 @@ class Data_container:
             wrong_word = main_data["wrong_word"]
             correct_word = main_data["correct_word"]
             word_position = str(main_data["word_position"])
-            correct_scores_str = self.transform_scores_to_str(self._scores[str((main_data_id, 0))])
-            wrong_scores_str = self.transform_scores_to_str(self._scores[str((main_data_id, 1))])
+            correct_scores_str = self.transform_scores_to_str(self._scores.get(str((main_data_id, 0)), []))
+            wrong_scores_str = self.transform_scores_to_str(self._scores.get(str((main_data_id, 1)), []))
             self._statistics_handle.write(
                 '"%s", "%s", "%s", "%s", %s\n' % (
                     mistake_type, wrong_sentence, wrong_word, word_position, wrong_scores_str))
