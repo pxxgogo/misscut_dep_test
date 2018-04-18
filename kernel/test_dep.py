@@ -19,6 +19,7 @@ def operate_data(data, data_No):
     analyze_sentence(data["wrong_sentence"], (data_No, 1))
     analyze_sentence(data["correct_sentence"], (data_No, 0))
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('input_path', type=str)
@@ -52,10 +53,13 @@ if __name__ == "__main__":
     global data_container
     if model_flag == 0:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                    statistics_path=statistics_path, model_type='ngram')
+                                        statistics_path=statistics_path, model_type='ngram')
+    elif model_flag == 1:
+        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
+                                        statistics_path=statistics_path, model_type='rnn', buffer_size=200)
     else:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                    statistics_path=statistics_path, model_type='rnn', buffer_size=200)
+                                        statistics_path=statistics_path, model_type='classification', buffer_size=200)
     reader = Reader(input_path)
     data_No = 0
 

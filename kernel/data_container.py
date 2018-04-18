@@ -4,6 +4,7 @@ from .model.rnn import wrapper
 
 NGRAM_TYPE = 'ngram'
 RNN_TYPE = 'rnn'
+CLASSIFICATION = "classification"
 RECORD_NUM = 50
 THRESHOLDS = (-20, -8)
 
@@ -46,8 +47,10 @@ class Data_container:
             rets = self.model.get_data(self._data_buffer['data'])
             if self._model_type == NGRAM_TYPE:
                 self.ngram_ret_operation(rets)
-            else:
+            elif self._model_type == RNN_TYPE:
                 self.nn_ret_operation(rets)
+            else:
+                self.classification_ret_operation(rets)
             self.init_buffer()
 
     def feed_data_forced(self):
@@ -56,10 +59,11 @@ class Data_container:
         rets = self.model.get_data(self._data_buffer['data'])
         if self._model_type == NGRAM_TYPE:
             self.ngram_ret_operation(rets)
-        else:
+        elif self._model_type == RNN_TYPE:
             self.nn_ret_operation(rets)
+        else:
+            self.classification_ret_operation(rets)
         self.init_buffer()
-
 
     def feed_main_data(self, main_data, main_data_ID):
         self._main_data_dict[main_data_ID] = main_data
@@ -117,7 +121,7 @@ class Data_container:
                     if score_info[0] < min_score:
                         min_score = score_info[0]
                 sum_score += score_info[0]
-            if oov_flag :
+            if oov_flag:
                 continue
             if data[0] == 0:
                 type_word = 'D'
@@ -135,11 +139,32 @@ class Data_container:
             scores_per_sentence.append(min_score)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
-    def transform_scores_to_str(self, scores):
-        ret = ""
-        for score in scores:
-            ret += str(score) + ", "
-        return ret
+    def classification_ret_operation(self, rets):
+        for data_ID_tuple, data, ret in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
+            if data[0] == 0:
+                type_word = 'D'
+            else:
+                type_word = 'B'
+            if ret[0] > ret[1]:
+                result = 0
+            else:
+                result = 1
+            log_str = "%s: %s %s %s %s %s # %d \n" % (type_word, data[1], data[2], data[3], data[4], data[5], result)
+            self.log_data(log_str, data_ID_tuple)
+            data_ID_tuple_str = str(data_ID_tuple)
+            scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
+            scores_per_sentence.append(ret)
+            self._scores[data_ID_tuple_str] = scores_per_sentence
+
+    def transform_scores_to_str(self, rets):
+        ret_str = ""
+        if self._model_type == CLASSIFICATION:
+            for ret in rets:
+                ret_str += str(ret[1]) + ", "
+        else:
+            for ret in rets:
+                ret_str += str(ret) + ", "
+        return ret_str
 
     def dump_csv_statistics(self):
         if self._test_mode == 1:
@@ -161,6 +186,8 @@ class Data_container:
                     "0", correct_sentence, correct_word, word_position, correct_scores_str))
 
     def dump_csv_precision(self):
+        if self._model_type == CLASSIFICATION:
+            return
         correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]
         delta = float(THRESHOLDS[1] - THRESHOLDS[0]) / float(RECORD_NUM)
         for data_ID_tuple_str, scores in self._scores.items():
