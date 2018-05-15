@@ -88,13 +88,13 @@ class Data_container:
     def log_data(self, log_str, data_ID_tuple):
         if data_ID_tuple != self._data_ID_tuple:
             if self._test_mode == 1:
-                self._log_handle.write("#SENTENCE: %s \n" % self._main_data_dict[data_ID_tuple[0]])
+                self._log_handle.write("\n\n\n#SENTENCE: %s \n" % self._main_data_dict[data_ID_tuple[0]])
             else:
                 if data_ID_tuple[1] == 0:
                     sentence = self._main_data_dict[data_ID_tuple[0]]["correct_sentence"]
                 else:
                     sentence = self._main_data_dict[data_ID_tuple[0]]["wrong_sentence"]
-                self._log_handle.write("#SENTENCE: %s \n" % sentence)
+                self._log_handle.write("\n\n\n#SENTENCE: %s \n" % sentence)
             self._data_ID_tuple = data_ID_tuple
         self._log_handle.write(log_str)
 
@@ -202,19 +202,19 @@ class Data_container:
                 type_word, data[1], data[2], data[3], data[4], data[5])
             for model_type in range(len(ret)):
                 if model_type == 0:
-                    log_str += "%s [%d]; \n" % (data[1], ret[model_type])
+                    log_str += "%s\tX\tX\t[%d]; \n" % (data[1], ret[model_type])
                 elif model_type == 1:
-                    log_str += "%s [%d]; \n" % (data[3], ret[model_type])
+                    log_str += "X\t%s\tX\t[%d]; \n" % (data[3], ret[model_type])
                 elif model_type == 2:
-                    log_str += "%s [%d]; \n" % (data[5], ret[model_type])
+                    log_str += "X\tX\t%s\t[%d]; \n" % (data[5], ret[model_type])
                 elif model_type == 3:
-                    log_str += "%s %s [%d]; \n" % (data[1], data[3], ret[model_type])
+                    log_str += "%s\t%s\tX\t[%d]; \n" % (data[1], data[3], ret[model_type])
                 elif model_type == 4:
-                    log_str += "%s %s [%d]; \n" % (data[1], data[5], ret[model_type])
+                    log_str += "%s\tX\t%s\t[%d]; \n" % (data[1], data[5], ret[model_type])
                 elif model_type == 5:
-                    log_str += "%s %s [%d]; \n" % (data[3], data[5], ret[model_type])
+                    log_str += "X\t%s\t%s\t[%d]; \n" % (data[3], data[5], ret[model_type])
                 elif model_type == 6:
-                    log_str += "%s %s %s [%d]; \n\n" % (data[1], data[3], data[5], ret[model_type])
+                    log_str += "%s\t%s\t%s\t[%d]; \n\n" % (data[1], data[3], data[5], ret[model_type])
 
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
