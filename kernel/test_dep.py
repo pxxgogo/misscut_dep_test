@@ -59,7 +59,7 @@ if __name__ == "__main__":
                                         statistics_path=statistics_path, model_type='rnn', buffer_size=200)
     else:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                        statistics_path=statistics_path, model_type='classification', buffer_size=200)
+                                        statistics_path=statistics_path, model_type='classification', buffer_size=256)
     reader = Reader(input_path)
     data_No = 0
 

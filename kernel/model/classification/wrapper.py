@@ -6,12 +6,12 @@ WORDS_VOCAB = "words_vocab"
 LABELS_VOCAB = "labels_vocab"
 
 
-class RNN_wrapper:
+class Wrapper:
 
     def __init__(self):
-        with open("./kernel/model/rnn/config.json") as handle:
+        with open("./kernel/model/classification/config_CG.json") as handle:
             self._config = json.load(handle)
-        with open("./kernel/model/rnn/ret.vocab") as handle:
+        with open("./kernel/model/classification/ret_CG.vocab") as handle:
             self._vocabs = json.load(handle)
         self._words_OOV = len(self._vocabs[WORDS_VOCAB])
         self._labels_OOV = len(self._vocabs[LABELS_VOCAB])
@@ -42,19 +42,38 @@ class RNN_wrapper:
                self._vocabs[LABELS_VOCAB].get(data[4], self._labels_OOV)]
         return ids
 
-    def rearrange_rets(self, deep_rets, broad_rets, data):
+    def rearrange_rets(self, deep_rets, broad_rets, deep_data_buffer, broad_data_buffer, data):
         rets = []
         deep_No = 0
         broad_No = 0
+        # print(len(deep_rets))
         for sub_data in data:
             item_type = sub_data[0]
             if item_type == 0:
-                rets = deep_rets[deep_No]
-                rets.append(deep_rets[deep_No])
+                # print(deep_rets[deep_No])
+                data = deep_data_buffer[deep_No]
+                OOV_flag = False
+                for i, ID, in zip(range(4), data):
+                    if i < 2:
+                        if ID == self._words_OOV:
+                            OOV_flag = True
+                    else:
+                        if ID == self._labels_OOV:
+                            OOV_flag = True
+                rets.append((deep_rets[deep_No], OOV_flag))
                 deep_No += 1
             else:
-                rets = broad_rets[broad_No]
-                rets.append(broad_rets[broad_No])
+                # print(broad_rets[broad_No])
+                data = broad_data_buffer[broad_No]
+                OOV_flag = False
+                for i, ID, in zip(range(4), data):
+                    if i < 2:
+                        if ID == self._words_OOV:
+                            OOV_flag = True
+                    else:
+                        if ID == self._labels_OOV:
+                            OOV_flag = True
+                rets.append((broad_rets[broad_No], OOV_flag))
                 broad_No += 1
         return rets
 
@@ -69,17 +88,17 @@ class RNN_wrapper:
             else:
                 broad_data_buffer.append(IDs)
         if len(deep_data_buffer) > 0:
-            deep_rets = self._deep_session.run([self._deep_model.logits],
+            deep_rets= self._deep_session.run(self._deep_model.logits,
                                           feed_dict={self._deep_model.data_placeholder: deep_data_buffer})
-            # print("D", deep_rets, deep_data_buffer, deep_best_indexes)
+            # print("D", deep_rets, deep_data_buffer)
         else:
             deep_rets = []
         if len(broad_data_buffer) > 0:
-            broad_rets = self._broad_session.run([self._broad_model.logits],
+            broad_rets = self._broad_session.run(self._broad_model.logits,
                                           feed_dict={self._broad_model.data_placeholder: broad_data_buffer})
-            # print("B", broad_rets, broad_data_buffer, broad_best_indexes)
+            # print("B", broad_rets, broad_data_buffer)
         else:
             broad_rets = []
         # print(broad_rets, deep_rets)
-        rets = self.rearrange_rets(deep_rets, broad_rets, data)
+        rets = self.rearrange_rets(deep_rets, broad_rets, deep_data_buffer, broad_data_buffer, data)
         return rets

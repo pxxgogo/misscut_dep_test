@@ -20,7 +20,7 @@ class RNN_wrapper:
 
         self._deep_session = tf.Session(config=session_config)
         with tf.variable_scope("model", reuse=tf.AUTO_REUSE, initializer=initializer):
-            self._deep_model = biRNN(config=self._config)
+            self._deep_model = RNN(config=self._config)
         self._deep_session.run(tf.global_variables_initializer())
         new_saver = tf.train.Saver()
         new_saver.restore(self._deep_session, tf.train.latest_checkpoint(
@@ -28,7 +28,7 @@ class RNN_wrapper:
 
         self._broad_session = tf.Session(config=session_config)
         with tf.variable_scope("model", reuse=tf.AUTO_REUSE, initializer=initializer):
-            self._broad_model = biRNN(config=self._config)
+            self._broad_model = RNN(config=self._config)
         self._broad_session.run(tf.global_variables_initializer())
         new_saver = tf.train.Saver()
         new_saver.restore(self._broad_session, tf.train.latest_checkpoint(
@@ -46,8 +46,10 @@ class RNN_wrapper:
         rets = []
         deep_No = 0
         broad_No = 0
+        # print(deep_costs)
         for sub_data in data:
             item_type = sub_data[0]
+            # print(deep_No, broad_No)
             if item_type == 0:
                 costs = deep_costs[deep_No]
                 data = deep_data_buffer[deep_No][1:]
@@ -96,13 +98,13 @@ class RNN_wrapper:
             else:
                 broad_data_buffer.append(IDs)
         if len(deep_data_buffer) > 0:
-            deep_costs, deep_best_indexes = self._deep_session.run([self._deep_model.cost_op, self._deep_model.best_indexes],
+            deep_costs= self._deep_session.run(self._deep_model.cost_op,
                                                 feed_dict={self._deep_model.data_placeholder: deep_data_buffer})
             # print("D", deep_costs, deep_data_buffer, deep_best_indexes)
         else:
             deep_costs = []
         if len(broad_data_buffer) > 0:
-            broad_costs, broad_best_indexes = self._broad_session.run([self._broad_model.cost_op, self._broad_model.best_indexes],
+            broad_costs = self._broad_session.run(self._broad_model.cost_op,
                                                   feed_dict={self._broad_model.data_placeholder: broad_data_buffer})
             # print("B", broad_costs, broad_data_buffer, broad_best_indexes)
         else:

@@ -4,9 +4,9 @@
   "hidden_size": 256,
   "layer_num": 2,
   "gpu_num": 1,
-  "deep_model_dir": "./model/model_deep_biRNN_CG",
-  "broad_model_dir": "./model/model_broad_biRNN_CG",
+  "deep_model_dir": "./model/5-9/deep",
+  "broad_model_dir": "./model/5-9/broad",
   "sequence_length": 5,
-  "word_vocab_size": 416342,
+  "word_vocab_size": 416344,
   "label_vocab_size": 48
 }

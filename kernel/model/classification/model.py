@@ -11,9 +11,6 @@ import tensorflow as tf
 flags = tf.flags
 logging = tf.logging
 
-flags.DEFINE_bool("use_fp16", False,
-                  "Train using 16-bit floats instead of 32bit floats")
-
 FLAGS = flags.FLAGS
 
 
@@ -36,13 +33,13 @@ class Model(object):
 
     def calculate_cost(self):
         input_data = self._data_placeholder
-        sub_batch_size = self._batch_size // self._config["gpu_num"]
+        batch_size = tf.shape(input_data)[0]
         word_embedding = tf.get_variable("word_embedding", [self._word_vocab_size, self._hidden_size],
                                          dtype=data_type())
         label_embedding = tf.get_variable("label_embedding", [self._label_vocab_size, self._hidden_size],
                                           dtype=data_type())
-        word_inputs = tf.nn.embedding_lookup(word_embedding, input_data[:, :3])
-        label_inputs = tf.nn.embedding_lookup(label_embedding, input_data[:, 3:5])
+        self.word_inputs = word_inputs = tf.nn.embedding_lookup(word_embedding, input_data[:, :3])
+        self.label_inputs = label_inputs = tf.nn.embedding_lookup(label_embedding, input_data[:, 3:5])
 
         data = tf.concat(
             [word_inputs[:, 0:1], label_inputs[:, 0:1], word_inputs[:, 1:2], label_inputs[:, 1:2], word_inputs[:, 2:3]],
@@ -52,27 +49,30 @@ class Model(object):
         for nn_info in nn_infos:
             if nn_info["net_type"] == "CONV":
                 if len(data.shape) == 3:
-                    data = tf.reshape(data, [data.shape[0], data.shape[1], data.shape[2], 1])
+                    data = tf.reshape(data, [-1, data.shape[1], data.shape[2], 1])
                 for i in range(nn_info["repeated_times"]):
                     data = self.add_conv_layer(layer_No, data, nn_info["filter_size"], nn_info["out_channels"],
                                                nn_info["filter_type"], self._config["regularized_lambda"],
-                                               self._config["regularized_flag"])
+                                               False)
                     layer_No += 1
             elif nn_info["net_type"] == "POOL":
                 if len(data.shape) == 3:
-                    data = tf.reshape(data, [data.shape[0], data.shape[1], data.shape[2], 1])
+                    data = tf.reshape(data, [-1, data.shape[1], data.shape[2], 1])
                 for i in range(nn_info["repeated_times"]):
                     data = self.add_pool_layer(layer_No, data, nn_info["pool_size"], nn_info["pool_type"])
                     layer_No += 1
             elif nn_info["net_type"] == "DENSE":
                 for i in range(nn_info["repeated_times"]):
-                    data = self.add_dense_layer(layer_No, data, nn_info["output_size"], nn_info["keep_prob"],
-                                                self._config["regularized_lambda"], self._config["regularized_flag"])
+                    data = self.add_dense_layer(layer_No, data, nn_info["output_size"], 1,
+                                                self._config["regularized_lambda"], False)
                     layer_No += 1
-
-        data = tf.reshape(data, [sub_batch_size, -1])
+        print("shape", data.shape)
+        le = self.get_length(data)
+        print("length", le)
+        data = tf.reshape(data, [batch_size, -1])
+        print(tf.shape(data)[1])
         softmax_w = tf.get_variable(
-            "softmax_w", [data.shape[1], 2], dtype=data_type())
+            "softmax_w", [le, 2], dtype=data_type())
         softmax_b = tf.get_variable("softmax_b", [2], dtype=data_type())
         logits = tf.matmul(data, softmax_w) + softmax_b
         return logits

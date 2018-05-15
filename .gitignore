@@ -7,3 +7,4 @@ model/**
 **.pyc
 **.csv
 **.swp
+test_results/**

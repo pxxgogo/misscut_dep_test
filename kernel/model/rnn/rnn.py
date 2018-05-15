@@ -154,7 +154,8 @@ class RNN(object):
         batch_size = tf.shape(input_data)[0]
         rnn_cell_list = []
         for nn_info in range(self._config['layer_num']):
-            rnn_cell = tf.contrib.rnn.GRUCell(self._hidden_size)
+            rnn_cell = tf.contrib.rnn.BasicLSTMCell(self._hidden_size, forget_bias=0.0, state_is_tuple=True)
+            # rnn_cell = tf.contrib.rnn.GRUCell(self._hidden_size)
             rnn_cell_list.append(rnn_cell)
 
         cell = tf.contrib.rnn.MultiRNNCell(rnn_cell_list, state_is_tuple=True)

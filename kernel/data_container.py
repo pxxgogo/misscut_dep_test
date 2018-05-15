@@ -1,12 +1,14 @@
 import re
 from .model.ngram import ngram
-from .model.rnn import wrapper
+from .model.classification.wrapper import Wrapper
+from .model.rnn.wrapper import RNN_wrapper
+import kenlm
 
 NGRAM_TYPE = 'ngram'
 RNN_TYPE = 'rnn'
 CLASSIFICATION = "classification"
 RECORD_NUM = 50
-THRESHOLDS = (-20, -8)
+THRESHOLDS = (-14, -6)
 
 DATA_ID_TUPLE_COMPILER = re.compile("\((\d+), (\d+)\)")
 
@@ -25,14 +27,20 @@ class Data_container:
         self._main_data_dict = {}
         self._test_mode = test_mode
         self._data_ID_tuple = -1
+        self.init_debug_ngram_model()
         if model_type == NGRAM_TYPE:
             self.model = ngram.Ngram()
+        elif model_type == RNN_TYPE:
+            self.model = RNN_wrapper()
         else:
-            self.model = wrapper.RNN_wrapper()
+            self.model = Wrapper()
 
     def init_buffer(self):
         self._data_buffer = {'data_ID_tuple': [], 'data': []}
         self._buffer_length = 0
+
+    def init_debug_ngram_model(self):
+        self._debug_model = kenlm.LanguageModel("./model/gigaword_broad.bin")
 
     def close_all_handles(self):
         self._log_handle.close()
@@ -112,14 +120,25 @@ class Data_container:
             oov_flag = False
             print_flag = False
             min_score = 100
-            for score_info in scores:
+            debug_score_list = [self._debug_model.score(data[i + 2], bos=False, eos=False) if score_info[0] < -6 else 0
+                                for i, score_info in zip(range(len(scores)), scores)]
+            # for score_info in scores:
+            #     if score_info[1]:
+            #         oov_flag = True
+            #     else:
+            #         if score_info[0] < -10:
+            #             print_flag = True
+            #         if score_info[0] < min_score:
+            #             min_score = score_info[0]
+            #     sum_score += score_info[0]
+            for score_info, debug_score in zip(scores, debug_score_list):
                 if score_info[1]:
                     oov_flag = True
                 else:
-                    if score_info[0] < -10:
+                    if score_info[0] < -6 and debug_score > -5.8:
                         print_flag = True
-                    if score_info[0] < min_score:
-                        min_score = score_info[0]
+                        if score_info[0] < min_score:
+                            min_score = score_info[0]
                 sum_score += score_info[0]
             if oov_flag:
                 continue
@@ -128,10 +147,16 @@ class Data_container:
             else:
                 type_word = 'B'
 
-            log_str = "%s: %s %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
-                type_word, data[1], data[2], scores[0][0], scores[0][1],
-                data[3], scores[1][0], scores[1][1], data[4], scores[2][0], scores[2][1], data[5],
-                scores[3][0], scores[3][1], sum_score)
+            log_str = "%s: %s %s [%.2f, %d, %.2f] %s [%.2f, %d, %.2f] %s [%.2f, %d, %.2f] %s [%.2f, %d, %.2f] # %.2f \n" % (
+                type_word, data[1], data[2], scores[0][0], scores[0][1], debug_score_list[0],
+                data[3], scores[1][0], scores[1][1], debug_score_list[1], data[4], scores[2][0], scores[2][1],
+                debug_score_list[2], data[5],
+                scores[3][0], scores[3][1], debug_score_list[3], sum_score)
+
+            # log_str = "%s: %s %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] %s [%.2f, %d] # %.2f \n" % (
+            #     type_word, data[1], data[2], scores[0][0], scores[0][1],
+            #     data[3], scores[1][0], scores[1][1], data[4], scores[2][0], scores[2][1], data[5],
+            #     scores[3][0], scores[3][1], sum_score)
             if sum_score < 0 and print_flag:
                 self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
@@ -145,11 +170,13 @@ class Data_container:
                 type_word = 'D'
             else:
                 type_word = 'B'
-            if ret[0] > ret[1]:
+            scores = ret[0]
+            if scores[0] > scores[1]:
                 result = 0
             else:
                 result = 1
-            log_str = "%s: %s %s %s %s %s # %d \n" % (type_word, data[1], data[2], data[3], data[4], data[5], result)
+            log_str = "%s: %s %s %s %s %s # %d          %s,    %s\n" % (
+                type_word, data[1], data[2], data[3], data[4], data[5], result, str(ret[0]), str(ret[1]))
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
@@ -160,7 +187,7 @@ class Data_container:
         ret_str = ""
         if self._model_type == CLASSIFICATION:
             for ret in rets:
-                ret_str += str(ret[1]) + ", "
+                ret_str += str(ret[0][1]) + ", "
         else:
             for ret in rets:
                 ret_str += str(ret) + ", "
@@ -190,6 +217,8 @@ class Data_container:
             return
         correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]
         delta = float(THRESHOLDS[1] - THRESHOLDS[0]) / float(RECORD_NUM)
+        find_num = [0 for i in range(RECORD_NUM)]
+        labels_list = [0 for i in range(RECORD_NUM)]
         for data_ID_tuple_str, scores in self._scores.items():
             data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
             data_flag = int(data_ID_tuple[1])
@@ -197,19 +226,32 @@ class Data_container:
             threshold = THRESHOLDS[0] - delta
             for i in range(RECORD_NUM):
                 threshold += delta
+                labels_list[i] = threshold
                 if min_score < threshold:
+                    find_num[i] += 1
                     if data_flag == 1:
                         correct_nums[1][i] += 1
                 else:
                     if data_flag == 0:
                         correct_nums[0][i] += 1
         output_str = ""
+        output_str += "阈值, "
         main_data_num = len(self._main_data_dict)
+        for label in labels_list:
+            output_str += str(label) + ", "
+        output_str += "\n"
+        output_str += "未误判率：（所有正确的句子中，认为正判的概率）, "
         for num in correct_nums[0]:
             precision = float(num) / main_data_num
             output_str += str(precision) + ", "
         output_str += "\n"
+        output_str += "召回率：, "
         for num in correct_nums[1]:
             precision = float(num) / main_data_num
+            output_str += str(precision) + ", "
+        output_str += "\n"
+        output_str += "准确率：, "
+        for i in range(len(correct_nums[1])):
+            precision = float(correct_nums[1][i]) / find_num[i]
             output_str += str(precision) + ", "
         self._precisions_handle.write(output_str)
