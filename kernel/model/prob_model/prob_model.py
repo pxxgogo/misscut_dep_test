@@ -67,24 +67,24 @@ class ProbModel:
         modified_word_3 = replace_special_symbols(word_3)
 
         scores = []
-        for model_type in range(7):
-            if model_type == 0:
+        for model_type_No in range(7):
+            if model_type_No == 0:
                 key = "%s: %s" % (dep_key, modified_word_1)
-            elif model_type == 1:
+            elif model_type_No == 1:
                 key = "%s: %s" % (dep_key, modified_word_2)
-            elif model_type == 2:
+            elif model_type_No == 2:
                 key = "%s: %s" % (dep_key, modified_word_3)
-            elif model_type == 3:
+            elif model_type_No == 3:
                 key = "%s: %s %s" % (dep_key, modified_word_1, modified_word_2)
-            elif model_type == 4:
+            elif model_type_No == 4:
                 key = "%s: %s %s" % (dep_key, modified_word_1, modified_word_3)
-            elif model_type == 5:
+            elif model_type_No == 5:
                 key = "%s: %s %s" % (dep_key, modified_word_2, modified_word_3)
-            elif model_type == 6:
+            elif model_type_No == 6:
                 key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word_2, modified_word_3)
             else:
                 key = ""
-            db = dbs[model_type]
+            db = dbs[self._model_types[model_type_No]]
             key = key.encode("utf-8")
             value = db.get(key)
             if value is None:
