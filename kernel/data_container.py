@@ -204,17 +204,17 @@ class Data_container:
                 if model_type == 0:
                     log_str += "%s [%d]; \n" % (data[1], ret[model_type])
                 elif model_type == 1:
-                    log_str += "%s [%d]; \n" % (data[2], ret[model_type])
-                elif model_type == 2:
                     log_str += "%s [%d]; \n" % (data[3], ret[model_type])
+                elif model_type == 2:
+                    log_str += "%s [%d]; \n" % (data[5], ret[model_type])
                 elif model_type == 3:
-                    log_str += "%s %s [%d]; \n" % (data[1], data[2], ret[model_type])
-                elif model_type == 4:
                     log_str += "%s %s [%d]; \n" % (data[1], data[3], ret[model_type])
+                elif model_type == 4:
+                    log_str += "%s %s [%d]; \n" % (data[1], data[5], ret[model_type])
                 elif model_type == 5:
-                    log_str += "%s %s [%d]; \n" % (data[2], data[3], ret[model_type])
+                    log_str += "%s %s [%d]; \n" % (data[3], data[5], ret[model_type])
                 elif model_type == 6:
-                    log_str += "%s %s %s [%d]; \n\n" % (data[1], data[2], data[3], ret[model_type])
+                    log_str += "%s %s %s [%d]; \n\n" % (data[1], data[3], data[5], ret[model_type])
 
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
