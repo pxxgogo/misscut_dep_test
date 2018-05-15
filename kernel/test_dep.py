@@ -57,6 +57,9 @@ if __name__ == "__main__":
     elif model_flag == 1:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
                                         statistics_path=statistics_path, model_type='rnn', buffer_size=200)
+    elif model_flag == 2:
+        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
+                                        statistics_path=statistics_path, model_type='prob_model', buffer_size=1)
     else:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
                                         statistics_path=statistics_path, model_type='classification', buffer_size=256)
