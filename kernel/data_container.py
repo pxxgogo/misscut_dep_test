@@ -15,6 +15,18 @@ THRESHOLDS = (-14, -6)
 DATA_ID_TUPLE_COMPILER = re.compile("\((\d+), (\d+)\)")
 
 
+def generate_log_sentence(data, data_type):
+    indexes = data["word_position"]
+    # correct
+    if data_type == 0:
+        log_sentence = "\n\n\n#CORRECT SENTENCE: %s \n" % (data["correct_sentence"])
+    else:
+        log_sentence = "\n\n\n#WRONG SENTENCE: %s \n" % (
+                data["wrong_sentence"][:indexes[0]] + "  @" + data["wrong_word"] + "@  " + data["wrong_sentence"][
+                                                                                           indexes[1]:])
+    return log_sentence
+
+
 class Data_container:
     def __init__(self, buffer_size=1, model_type=NGRAM_TYPE, log_path="./log.txt", statistics_path="./statistics.csv",
                  precisions_path="precisions.csv", test_mode=0):
@@ -90,11 +102,12 @@ class Data_container:
             if self._test_mode == 1:
                 self._log_handle.write("\n\n\n#SENTENCE: %s \n" % self._main_data_dict[data_ID_tuple[0]])
             else:
-                if data_ID_tuple[1] == 0:
-                    sentence = self._main_data_dict[data_ID_tuple[0]]["correct_sentence"]
-                else:
-                    sentence = self._main_data_dict[data_ID_tuple[0]]["wrong_sentence"]
-                self._log_handle.write("\n\n\n#SENTENCE: %s \n" % sentence)
+                # if data_ID_tuple[1] == 0:
+                #     sentence = self._main_data_dict[data_ID_tuple[0]]["correct_sentence"]
+                # else:
+                #     sentence = self._main_data_dict[data_ID_tuple[0]]["wrong_sentence"]
+                # self._log_handle.write("\n\n\n#SENTENCE: %s \n" % sentence)
+                self._log_handle.write(generate_log_sentence(self._main_data_dict[data_ID_tuple[0]], data_ID_tuple[1]))
             self._data_ID_tuple = data_ID_tuple
         self._log_handle.write(log_str)
 
@@ -190,7 +203,6 @@ class Data_container:
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
             scores_per_sentence.append(ret)
             self._scores[data_ID_tuple_str] = scores_per_sentence
-
 
     def prob_ret_operation(self, rets):
         for data_ID_tuple, data, ret in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
