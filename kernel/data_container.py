@@ -264,7 +264,10 @@ class Data_container:
                     "0", correct_sentence, correct_word, word_position, correct_scores_str))
 
     def dump_csv_precision(self):
-        if self._model_type == CLASSIFICATION_TYPE or self._model_type == PROB_MODEL_TYPE:
+        if self._model_type == CLASSIFICATION_TYPE:
+            return
+        elif self._model_type == PROB_MODEL_TYPE:
+            self.dump_csv_precision_prob_model()
             return
         correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]
         delta = float(THRESHOLDS[1] - THRESHOLDS[0]) / float(RECORD_NUM)
@@ -287,6 +290,53 @@ class Data_container:
                         correct_nums[0][i] += 1
         output_str = ""
         output_str += "阈值, "
+        main_data_num = len(self._main_data_dict)
+        for label in labels_list:
+            output_str += str(label) + ", "
+        output_str += "\n"
+        output_str += "未误判率：（所有正确的句子中，认为正判的概率）, "
+        for num in correct_nums[0]:
+            precision = float(num) / main_data_num
+            output_str += str(precision) + ", "
+        output_str += "\n"
+        output_str += "召回率：, "
+        for num in correct_nums[1]:
+            precision = float(num) / main_data_num
+            output_str += str(precision) + ", "
+        output_str += "\n"
+        output_str += "准确率：, "
+        for i in range(len(correct_nums[1])):
+            precision = float(correct_nums[1][i]) / find_num[i]
+            output_str += str(precision) + ", "
+        self._precisions_handle.write(output_str)
+
+    def dump_csv_precision_prob_model(self):
+        correct_nums = [[0 for i in range(4)], [0 for i in range(4)]]
+        find_num = [0 for i in range(4)]
+        for data_ID_tuple_str, scores in self._scores.items():
+            data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
+            data_flag = int(data_ID_tuple[1])
+            max_zero_count = 0
+            for sub_scores in scores:
+                zero_count = 0
+                for score in sub_scores:
+                    if score == 0:
+                        zero_count += 1
+                if max_zero_count < zero_count:
+                    max_zero_count = zero_count
+            for i in range(4):
+                zero_threshold = i + 1
+                if max_zero_count >= zero_threshold:
+                    find_num[i] += 1
+                    if data_flag == 1:
+                        correct_nums[1][i] += 1
+                else:
+                    if data_flag == 0:
+                        correct_nums[0][i] += 1
+
+        labels_list = [i + 1 for i in range(4)]
+        output_str = ""
+        output_str += "0数阈值, "
         main_data_num = len(self._main_data_dict)
         for label in labels_list:
             output_str += str(label) + ", "
