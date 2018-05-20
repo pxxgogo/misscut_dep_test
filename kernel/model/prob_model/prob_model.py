@@ -152,18 +152,24 @@ class ProbModel:
             for word in closed_words:
                 modified_word = replace_special_symbols(word[0])
                 if analyzed_word_No == 0:
+                    if model_type_No == 2:
+                        continue
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, modified_word, words[1],
                                            words[2])
                     if score > 0:
                         rets.append(self.generate_ret(model_type_No + 3, score, modified_word, words[1], words[2],
                                                       modified_flag=True))
                 elif analyzed_word_No == 1:
+                    if model_type_No == 1:
+                        continue
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, words[0], modified_word,
                                            words[2])
                     if score > 0:
                         rets.append(self.generate_ret(model_type_No + 3, score, words[0], modified_word, words[2],
                                                       modified_flag=True))
                 elif analyzed_word_No == 2:
+                    if model_type_No == 0:
+                        continue
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, words[0], words[1],
                                            modified_word)
                     if score > 0:
