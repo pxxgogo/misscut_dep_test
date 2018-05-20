@@ -31,7 +31,7 @@ def b_2_i(bytes):
 
 class ProbModel:
     def __init__(self, deep_model_dir="./model/leveldb/deep", broad_model_dir="./model/leveldb/broad",
-                 word_vectors_dir="./model/leveldb/word_vectors", model_flag=0):
+                 word_vectors_dir="./model/leveldb/word_vectors.txt", model_flag=0):
         self._deep_dbs = {'s1': plyvel.DB(os.path.join(deep_model_dir, 's1.db')),
                           's2': plyvel.DB(os.path.join(deep_model_dir, 's2.db')),
                           's3': plyvel.DB(os.path.join(deep_model_dir, 's3.db')),
