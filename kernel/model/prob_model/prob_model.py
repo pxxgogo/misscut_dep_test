@@ -90,21 +90,22 @@ class ProbModel:
             score = b_2_i(value)
         return score
 
-    def generate_ret(self, model_type_No, score, modified_word_1, modified_word_2, modified_word_3):
+    def generate_ret(self, model_type_No, score, modified_word_1, modified_word_2, modified_word_3,
+                     modified_flag=False):
         if model_type_No == 0:
-            ret = (score, (modified_word_1, "X", "X"), model_type_No)
+            ret = (score, (modified_word_1, "X", "X"), model_type_No, modified_flag)
         elif model_type_No == 1:
-            ret = (score, ("X", modified_word_2, "X"), model_type_No)
+            ret = (score, ("X", modified_word_2, "X"), model_type_No, modified_flag)
         elif model_type_No == 2:
-            ret = (score, ("X", "X", modified_word_3), model_type_No)
+            ret = (score, ("X", "X", modified_word_3), model_type_No, modified_flag)
         elif model_type_No == 3:
-            ret = (score, (modified_word_1, modified_word_2, "X"), model_type_No)
+            ret = (score, (modified_word_1, modified_word_2, "X"), model_type_No, modified_flag)
         elif model_type_No == 4:
-            ret = (score, (modified_word_1, "X", modified_word_3), model_type_No)
+            ret = (score, (modified_word_1, "X", modified_word_3), model_type_No, modified_flag)
         elif model_type_No == 5:
-            ret = (score, ("X", modified_word_2, modified_word_3), model_type_No)
+            ret = (score, ("X", modified_word_2, modified_word_3), model_type_No, modified_flag)
         elif model_type_No == 6:
-            ret = (score, (modified_word_1, modified_word_2, modified_word_3), model_type_No)
+            ret = (score, (modified_word_1, modified_word_2, modified_word_3), model_type_No, modified_flag)
         else:
             ret = ()
         return ret
@@ -154,14 +155,17 @@ class ProbModel:
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, modified_word, words[1],
                                            words[2])
                     if score > 0:
-                        rets.append(self.generate_ret(model_type_No, score, modified_word, words[1], words[2]))
+                        rets.append(self.generate_ret(model_type_No + 3, score, modified_word, words[1], words[2],
+                                                      modified_flag=True))
                 elif analyzed_word_No == 1:
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, words[0], modified_word,
                                            words[2])
                     if score > 0:
-                        rets.append(self.generate_ret(model_type_No, score, words[0], modified_word, words[2]))
+                        rets.append(self.generate_ret(model_type_No + 3, score, words[0], modified_word, words[2],
+                                                      modified_flag=True))
                 elif analyzed_word_No == 2:
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, words[0], words[1],
                                            modified_word)
                     if score > 0:
-                        rets.append(self.generate_ret(model_type_No, score, words[0], words[1], modified_word))
+                        rets.append(self.generate_ret(model_type_No + 3, score, words[0], words[1], modified_word,
+                                                      modified_flag=True))

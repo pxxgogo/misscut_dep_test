@@ -213,7 +213,10 @@ class Data_container:
             log_str = "%s: %s %s %s %s %s #\n" % (
                 type_word, data[1], data[2], data[3], data[4], data[5])
             for ret in rets:
-                log_str += "%s\t%s\t%s\t[%d] type: %d; \n" % (ret[1][0], ret[1][1], ret[1][2], ret[0], ret[2])
+                if ret[3]:
+                    log_str += "%s\t%s\t%s\t[%d] type: %d*; \n" % (ret[1][0], ret[1][1], ret[1][2], ret[0], ret[2])
+                else:
+                    log_str += "%s\t%s\t%s\t[%d] type: %d; \n" % (ret[1][0], ret[1][1], ret[1][2], ret[0], ret[2])
             # for model_type in range(len(ret)):
             #     if model_type == 0:
             #         log_str += "%s\tX\tX\t[%d]; \n" % (data[1], ret[model_type])
