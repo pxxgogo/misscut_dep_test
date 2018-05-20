@@ -35,7 +35,7 @@ class Word_vectors:
         vector /= np.sqrt(vector.dot(vector))
         return vector
 
-    def get_closed_words(self, word_name, k=30):
+    def get_closed_words(self, word_name, k=100):
         key_word_vector = self.get_word_vector(word_name)
         query = self.kdtree.query(key_word_vector, k)
         indexes = query[1]

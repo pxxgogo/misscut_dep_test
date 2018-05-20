@@ -156,6 +156,7 @@ class ProbModel:
                         continue
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, modified_word, words[1],
                                            words[2])
+                    print(dep_key, modified_word, words[1], words[2], score, words[0])
                     if score > 0:
                         rets.append(self.generate_ret(model_type_No + 3, score, modified_word, words[1], words[2],
                                                       modified_flag=True))
