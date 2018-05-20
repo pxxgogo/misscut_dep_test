@@ -29,7 +29,9 @@ class Word_vectors:
         self.kdtree = cKDTree(self.vectors)
 
     def get_word_vector(self, word):
-        vector = self.word2vector.get(word, np.zeros([300]))
+        if not word in self.word2vector:
+            return np.zeros([300])
+        vector = self.word2vector[word]
         vector /= np.sqrt(vector.dot(vector))
         return vector
 
