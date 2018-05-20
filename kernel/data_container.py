@@ -204,34 +204,36 @@ class Data_container:
             scores_per_sentence.append(ret)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
-    def prob_ret_operation(self, rets):
-        for data_ID_tuple, data, ret in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
+    def prob_ret_operation(self, rets_list):
+        for data_ID_tuple, data, rets in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets_list):
             if data[0] == 0:
                 type_word = 'D'
             else:
                 type_word = 'B'
             log_str = "%s: %s %s %s %s %s #\n" % (
                 type_word, data[1], data[2], data[3], data[4], data[5])
-            for model_type in range(len(ret)):
-                if model_type == 0:
-                    log_str += "%s\tX\tX\t[%d]; \n" % (data[1], ret[model_type])
-                elif model_type == 1:
-                    log_str += "X\t%s\tX\t[%d]; \n" % (data[3], ret[model_type])
-                elif model_type == 2:
-                    log_str += "X\tX\t%s\t[%d]; \n" % (data[5], ret[model_type])
-                elif model_type == 3:
-                    log_str += "%s\t%s\tX\t[%d]; \n" % (data[1], data[3], ret[model_type])
-                elif model_type == 4:
-                    log_str += "%s\tX\t%s\t[%d]; \n" % (data[1], data[5], ret[model_type])
-                elif model_type == 5:
-                    log_str += "X\t%s\t%s\t[%d]; \n" % (data[3], data[5], ret[model_type])
-                elif model_type == 6:
-                    log_str += "%s\t%s\t%s\t[%d]; \n\n" % (data[1], data[3], data[5], ret[model_type])
+            for ret in rets:
+                log_str += "%s\t%s\t%s\t[%d] type: %d; \n" % (ret[1][0], ret[1][1], ret[1][2], ret[0], ret[2])
+            # for model_type in range(len(ret)):
+            #     if model_type == 0:
+            #         log_str += "%s\tX\tX\t[%d]; \n" % (data[1], ret[model_type])
+            #     elif model_type == 1:
+            #         log_str += "X\t%s\tX\t[%d]; \n" % (data[3], ret[model_type])
+            #     elif model_type == 2:
+            #         log_str += "X\tX\t%s\t[%d]; \n" % (data[5], ret[model_type])
+            #     elif model_type == 3:
+            #         log_str += "%s\t%s\tX\t[%d]; \n" % (data[1], data[3], ret[model_type])
+            #     elif model_type == 4:
+            #         log_str += "%s\tX\t%s\t[%d]; \n" % (data[1], data[5], ret[model_type])
+            #     elif model_type == 5:
+            #         log_str += "X\t%s\t%s\t[%d]; \n" % (data[3], data[5], ret[model_type])
+            #     elif model_type == 6:
+            #         log_str += "%s\t%s\t%s\t[%d]; \n\n" % (data[1], data[3], data[5], ret[model_type])
 
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
             scores_per_sentence = self._scores.get(data_ID_tuple_str, [])
-            scores_per_sentence.append(ret)
+            scores_per_sentence.append(rets)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
     def transform_scores_to_str(self, rets):
@@ -239,6 +241,9 @@ class Data_container:
         if self._model_type == CLASSIFICATION_TYPE:
             for ret in rets:
                 ret_str += str(ret[0][1]) + ", "
+        # elif self._model_type == PROB_MODEL_TYPE:
+        #     for ret in rets:
+        #         ret_str += str(ret[0][1]) + ", "
         else:
             for ret in rets:
                 ret_str += str(ret) + ", "
@@ -313,14 +318,14 @@ class Data_container:
     def dump_csv_precision_prob_model(self):
         correct_nums = [[0 for i in range(4)], [0 for i in range(4)]]
         find_num = [0 for i in range(4)]
-        for data_ID_tuple_str, scores in self._scores.items():
+        for data_ID_tuple_str, rets in self._scores.items():
             data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
             data_flag = int(data_ID_tuple[1])
             max_zero_count = 0
-            for sub_scores in scores:
+            for sub_rets in rets:
                 zero_count = 0
-                for score in sub_scores:
-                    if score == 0:
+                for ret in sub_rets:
+                    if ret[0] == 0:
                         zero_count += 1
                 if max_zero_count < zero_count:
                     max_zero_count = zero_count
