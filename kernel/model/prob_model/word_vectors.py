@@ -20,6 +20,7 @@ class Word_vectors:
             tokens = line.rstrip().split(' ')
             raw_vector = list(map(float, tokens[1:]))
             vector = np.array(raw_vector, np.float16)
+            vector /= np.sqrt(vector.dot(vector))
             self.word2vector[tokens[0]] = vector
             self.vectors.append(vector)
             self.words.append(tokens[0])
@@ -32,7 +33,6 @@ class Word_vectors:
         if not word in self.word2vector:
             return np.zeros([300])
         vector = self.word2vector[word]
-        vector /= np.sqrt(vector.dot(vector))
         return vector
 
     def get_closed_words(self, word_name, k=100):

@@ -156,10 +156,10 @@ class ProbModel:
                         continue
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, modified_word, words[1],
                                            words[2])
-                    if words[0] == "加油声":
-                        print(closed_words)
-                        print(analyzed_word)
-                        print(model_type_No + 3, analyzed_word_No, word, dep_key, modified_word, words[1], words[2], score, words[0])
+                    # if words[0] == "加油声":
+                    #     print(closed_words)
+                    #     print(analyzed_word)
+                    #     print(model_type_No + 3, analyzed_word_No, word, dep_key, modified_word, words[1], words[2], score, words[0])
                     if score > 0:
                         rets.append(self.generate_ret(model_type_No + 3, score, modified_word, words[1], words[2],
                                                       modified_flag=True))
