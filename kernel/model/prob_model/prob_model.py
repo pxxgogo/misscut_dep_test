@@ -144,8 +144,8 @@ class ProbModel:
                     analyzed_word_No = -1
         if not analyze_flag:
             return
-        word = words[analyzed_word_No]
-        closed_words = self.word_vectors.get_closed_words(word)
+        analyzed_word = words[analyzed_word_No]
+        closed_words = self.word_vectors.get_closed_words(analyzed_word)
         if len(closed_words) == 0:
             return
         for model_type_No in range(4):
@@ -158,6 +158,7 @@ class ProbModel:
                                            words[2])
                     if words[0] == "加油声":
                         print(closed_words)
+                        print(analyzed_word)
                         print(model_type_No + 3, analyzed_word_No, word, dep_key, modified_word, words[1], words[2], score, words[0])
                     if score > 0:
                         rets.append(self.generate_ret(model_type_No + 3, score, modified_word, words[1], words[2],
