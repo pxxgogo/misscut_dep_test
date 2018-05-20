@@ -44,7 +44,7 @@ class Word_vectors:
             word = self.words[index]
             vector = self.get_word_vector(word)
             score = vector.dot(key_word_vector)
-            if score < SCORE_THRESHOLD:
+            if score > SCORE_THRESHOLD:
                 rets.append((word, score))
             else:
                 break

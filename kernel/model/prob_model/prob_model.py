@@ -149,7 +149,7 @@ class ProbModel:
             return
         for model_type_No in range(4):
             for word in closed_words:
-                modified_word = replace_special_symbols(word)
+                modified_word = replace_special_symbols(word[0])
                 if analyzed_word_No == 0:
                     score = self.get_score((main_model_type, model_type_No + 3), dep_key, modified_word, words[1],
                                            words[2])
