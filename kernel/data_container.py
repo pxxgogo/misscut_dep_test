@@ -216,9 +216,9 @@ class Data_container:
                 if model_type == 0:
                     log_str += "%s\t\t\t[%d]; \n" % (data[1], ret[model_type])
                 elif model_type == 1:
-                    log_str += "%s\t\t\t[%d]; \n" % (data[2], ret[model_type])
-                elif model_type == 2:
                     log_str += "%s\t\t\t[%d]; \n" % (data[3], ret[model_type])
+                elif model_type == 2:
+                    log_str += "%s\t\t\t[%d]; \n" % (data[5], ret[model_type])
                 elif model_type == 3:
                     log_str += "%s\tX\tX\t[%d]; \n" % (data[1], ret[model_type])
                 elif model_type == 4:
