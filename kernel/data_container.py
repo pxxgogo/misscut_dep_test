@@ -108,10 +108,10 @@ class Data_container:
 
     def generate_prob_ngram_rets_log(self, data_ID_tuple):
         rets = self._main_token_rets[str(data_ID_tuple)]
-        log_str = ""
+        log_str = "\nNGRAM_RETS: "
         for ret in rets:
-            log_str += "%s-[%d, %d, %d] " % (ret[0], ret[1][0], ret[1][1], ret[1][2])
-        log_str += "\n"
+            log_str += "%s[%d, %d, %d] " % (ret[0], ret[1][0], ret[1][1], ret[1][2])
+        log_str += "\n\n"
         return log_str
 
     # data_ID_tuple: [main_data_ID, correct_or_wrong]
@@ -237,6 +237,9 @@ class Data_container:
             word_3_info = data[5]
             label_1 = data[2]
             label_2 = data[4]
+            word_1 = word_1_info["text"]
+            word_2 = word_2_info["text"]
+            word_3 = word_3_info["text"]
 
             log_str = "%s: %s-%s-%d %s %s-%s-%d %s %s-%s-%d #\n" % (
                 type_word, word_1_info['text'], word_1_info['POS'], word_1_info['index'][0], label_1,
@@ -244,25 +247,25 @@ class Data_container:
                 word_3_info['POS'], word_3_info['index'][0])
             for model_type in range(len(ret)):
                 if model_type == 0:
-                    log_str += "%s\t\t\t[%d]; \n" % (data[1], ret[model_type])
+                    log_str += "%s\t\t\t[%d]; \n" % (word_1, ret[model_type])
                 elif model_type == 1:
-                    log_str += "%s\t\t\t[%d]; \n" % (data[3], ret[model_type])
+                    log_str += "%s\t\t\t[%d]; \n" % (word_2, ret[model_type])
                 elif model_type == 2:
-                    log_str += "%s\t\t\t[%d]; \n" % (data[5], ret[model_type])
+                    log_str += "%s\t\t\t[%d]; \n" % (word_3, ret[model_type])
                 elif model_type == 3:
-                    log_str += "%s\tX\tX\t[%d]; \n" % (data[1], ret[model_type])
+                    log_str += "%s\tX\tX\t[%d]; \n" % (word_1, ret[model_type])
                 elif model_type == 4:
-                    log_str += "X\t%s\tX\t[%d]; \n" % (data[3], ret[model_type])
+                    log_str += "X\t%s\tX\t[%d]; \n" % (word_2, ret[model_type])
                 elif model_type == 5:
-                    log_str += "X\tX\t%s\t[%d]; \n" % (data[5], ret[model_type])
+                    log_str += "X\tX\t%s\t[%d]; \n" % (word_3, ret[model_type])
                 elif model_type == 6:
-                    log_str += "%s\t%s\tX\t[%d]; \n" % (data[1], data[3], ret[model_type])
+                    log_str += "%s\t%s\tX\t[%d]; \n" % (word_1, word_2, ret[model_type])
                 elif model_type == 7:
-                    log_str += "%s\tX\t%s\t[%d]; \n" % (data[1], data[5], ret[model_type])
+                    log_str += "%s\tX\t%s\t[%d]; \n" % (word_1, word_3, ret[model_type])
                 elif model_type == 8:
-                    log_str += "X\t%s\t%s\t[%d]; \n" % (data[3], data[5], ret[model_type])
+                    log_str += "X\t%s\t%s\t[%d]; \n" % (word_2, word_3, ret[model_type])
                 elif model_type == 9:
-                    log_str += "%s\t%s\t%s\t[%d]; \n\n" % (data[1], data[3], data[5], ret[model_type])
+                    log_str += "%s\t%s\t%s\t[%d]; \n\n" % (word_1, word_2, word_3, ret[model_type])
 
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
