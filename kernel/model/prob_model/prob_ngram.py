@@ -16,6 +16,13 @@ def replace_special_symbols(sentence):
     modified_sentence = LETTER_RE_COMPILOR.sub(LETTER_TAG, modified_sentence)
     return modified_sentence
 
+def modified_items(items):
+    new_items = []
+    for item in items:
+        new_item = replace_special_symbols(item)
+        new_items.append(new_item)
+    return new_items
+
 
 def i_2_b(digit):
     # print(digit, digit.to_bytes(8, byteorder='big'))
@@ -34,6 +41,7 @@ class ProbNgramModel:
                      plyvel.DB(os.path.join(model_dir, '3-gram.db'))]
 
     def score(self, items):
+        items = modified_items(items)
         items.insert(0, "{BOS}")
         items.append("{EOS}")
         item_No = -1
