@@ -55,12 +55,15 @@ class ProbModel:
             rets.append(ret)
         return rets
 
-    def score(self, type, word_1, label_1, word_2, label_2, word_3):
+    def score(self, type, word_1_info, label_1, word_2_info, label_2, word_3_info):
         if type == 0:
             dbs = self._deep_dbs
         else:
             dbs = self._broad_dbs
         dep_key = "%s %s" % (label_1, label_2)
+        word_1 = word_1_info["text"]
+        word_2 = word_2_info["text"]
+        word_3 = word_3_info["text"]
         if word_1 != "{ROOT}":
             modified_word_1 = replace_special_symbols(word_1)
         else:

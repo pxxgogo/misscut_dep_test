@@ -30,8 +30,8 @@ def search_beginning(lines, line_No, lines_num):
     return -1, None
 
 
-def operate_sub_tree(type, word_0, label_0, word_1, label_1, word_2, sentence_No, data_container):
-    data = (type, word_0, label_0, word_1, label_1, word_2)
+def operate_sub_tree(type, word_0_info, label_0, word_1_info, label_1, word_2_info, sentence_No, data_container):
+    data = (type, word_0_info, label_0, word_1_info, label_1, word_2_info)
     data_container.feed_data(data, sentence_No)
 
 
@@ -39,9 +39,9 @@ def search_pattern_1(node_No, tokens, tree, sentence_No, data_container):
     node_info = tree[node_No]
     for child_info in node_info:
         for grandchild_info in tree[child_info['child']]:
-            operate_sub_tree(0, tokens[node_No]['text'], child_info['relation'],
-                             tokens[child_info['child']]['text'], grandchild_info['relation'],
-                             tokens[grandchild_info['child']]['text'], sentence_No, data_container)
+            operate_sub_tree(0, tokens[node_No], child_info['relation'],
+                             tokens[child_info['child']], grandchild_info['relation'],
+                             tokens[grandchild_info['child']], sentence_No, data_container)
 
 
 def search_pattern_2(node_No, tokens, tree, sentence_No, data_container):
@@ -51,9 +51,9 @@ def search_pattern_2(node_No, tokens, tree, sentence_No, data_container):
         for child_2_No in range(child_1_No + 1, child_num):
             child_1_info = node_info[child_1_No]
             child_2_info = node_info[child_2_No]
-            operate_sub_tree(1, tokens[node_No]['text'], child_1_info['relation'],
-                             tokens[child_1_info['child']]['text'], child_2_info['relation'],
-                             tokens[child_2_info['child']]['text'], sentence_No, data_container)
+            operate_sub_tree(1, tokens[node_No], child_1_info['relation'],
+                             tokens[child_1_info['child']], child_2_info['relation'],
+                             tokens[child_2_info['child']], sentence_No, data_container)
 
 
 def parse_node(node_No, tokens, tree, sentence_No, data_container):

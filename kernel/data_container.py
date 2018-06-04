@@ -155,6 +155,7 @@ class Data_container:
             scores_per_sentence.append(sum_score)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
+    # NEED TO BE MODIFIED
     def nn_ret_operation(self, rets):
         for data_ID_tuple, data, scores in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
             sum_score = 0
@@ -205,6 +206,7 @@ class Data_container:
             scores_per_sentence.append(min_score)
             self._scores[data_ID_tuple_str] = scores_per_sentence
 
+    # NEED TO BE MODIFIED
     def classification_ret_operation(self, rets):
         for data_ID_tuple, data, ret in zip(self._data_buffer['data_ID_tuple'], self._data_buffer['data'], rets):
             if data[0] == 0:
@@ -230,8 +232,16 @@ class Data_container:
                 type_word = 'D'
             else:
                 type_word = 'B'
-            log_str = "%s: %s %s %s %s %s #\n" % (
-                type_word, data[1], data[2], data[3], data[4], data[5])
+            word_1_info = data[1]
+            word_2_info = data[3]
+            word_3_info = data[5]
+            label_1 = data[2]
+            label_2 = data[4]
+
+            log_str = "%s: %s-%s-%d %s %s-%s-%d %s %s-%s-%d #\n" % (
+                type_word, word_1_info['text'], word_1_info['POS'], word_1_info['index'][0], label_1,
+                word_2_info['text'], word_2_info['POS'], word_2_info['index'][0], label_2, word_3_info['text'],
+                word_3_info['POS'], word_3_info['index'][0])
             for model_type in range(len(ret)):
                 if model_type == 0:
                     log_str += "%s\t\t\t[%d]; \n" % (data[1], ret[model_type])
