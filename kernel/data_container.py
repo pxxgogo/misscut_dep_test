@@ -43,7 +43,7 @@ class Data_container:
         self._main_token_rets = {}
         self._test_mode = test_mode
         self._data_ID_tuple = -1
-        self.init_debug_ngram_model()
+        # self.init_debug_ngram_model()
         self.model = None
         self.model_2 = None
         if model_type == NGRAM_TYPE:
