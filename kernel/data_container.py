@@ -253,18 +253,36 @@ class Data_container:
                 elif model_type == 2:
                     log_str += "%s\t\t\t[%d]; \n" % (word_3, ret[model_type])
                 elif model_type == 3:
-                    log_str += "%s\tX\tX\t[%d]; \n" % (word_1, ret[model_type])
+                    log_str += "%s\tX\t--\t[%d]; \n" % (word_1, ret[model_type])
                 elif model_type == 4:
-                    log_str += "X\t%s\tX\t[%d]; \n" % (word_2, ret[model_type])
+                    log_str += "X\t%s\t--\t[%d]; \n" % (word_2, ret[model_type])
                 elif model_type == 5:
-                    log_str += "X\tX\t%s\t[%d]; \n" % (word_3, ret[model_type])
+                    log_str += "%s\t%s\t--\t[%d]; \n" % (word_1, word_2, ret[model_type])
                 elif model_type == 6:
-                    log_str += "%s\t%s\tX\t[%d]; \n" % (word_1, word_2, ret[model_type])
+                    if data[0] == 0:
+                        log_str += "%s\tX\t--\t[%d]; \n" % (word_2, ret[model_type])
+                    else:
+                        log_str += "%s\tX\t--\t[%d]; \n" % (word_1, ret[model_type])
                 elif model_type == 7:
-                    log_str += "%s\tX\t%s\t[%d]; \n" % (word_1, word_3, ret[model_type])
+                    log_str += "X\t%s\t--\t[%d]; \n" % (word_3, ret[model_type])
                 elif model_type == 8:
-                    log_str += "X\t%s\t%s\t[%d]; \n" % (word_2, word_3, ret[model_type])
+                    if data[0] == 0:
+                        log_str += "%s\t%s\t--\t[%d]; \n" % (word_2, word_3, ret[model_type])
+                    else:
+                        log_str += "%s\t%s\t--\t[%d]; \n" % (word_1, word_3, ret[model_type])
                 elif model_type == 9:
+                    log_str += "%s\tX\tX\t[%d]; \n" % (word_1, ret[model_type])
+                elif model_type == 10:
+                    log_str += "X\t%s\tX\t[%d]; \n" % (word_2, ret[model_type])
+                elif model_type == 11:
+                    log_str += "X\tX\t%s\t[%d]; \n" % (word_3, ret[model_type])
+                elif model_type == 12:
+                    log_str += "%s\t%s\tX\t[%d]; \n" % (word_1, word_2, ret[model_type])
+                elif model_type == 13:
+                    log_str += "%s\tX\t%s\t[%d]; \n" % (word_1, word_3, ret[model_type])
+                elif model_type == 14:
+                    log_str += "X\t%s\t%s\t[%d]; \n" % (word_2, word_3, ret[model_type])
+                elif model_type == 15:
                     log_str += "%s\t%s\t%s\t[%d]; \n\n" % (word_1, word_2, word_3, ret[model_type])
 
             self.log_data(log_str, data_ID_tuple)
