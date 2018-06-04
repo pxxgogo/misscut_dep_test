@@ -7,11 +7,12 @@ from .reader import Reader
 from .data_container import Data_container
 
 
-def analyze_sentence(sentence, sentence_ID):
+def analyze_sentence(sentence, sentence_ID_tuple):
     ret = kernel.get_parsed_ret(sentence)
-    tokens = kernel.get_tokens(ret)
+    tokens, token_contents = kernel.get_tokens(ret)
+    data_container.feed_tokens_data(token_contents, sentence_ID_tuple)
     dependency_tree = kernel.build_dependency_tree(ret, tokens)
-    kernel.parse_tree(dependency_tree, tokens, sentence_ID, data_container)
+    kernel.parse_tree(dependency_tree, tokens, sentence_ID_tuple, data_container)
 
 
 def operate_data(data, data_No):
@@ -60,6 +61,9 @@ if __name__ == "__main__":
     elif model_flag == 2:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
                                         statistics_path=statistics_path, model_type='prob_model', buffer_size=1)
+    elif model_flag == 3:
+        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
+                                        statistics_path=statistics_path, model_type='prob_model_ngram', buffer_size=1)
     else:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
                                         statistics_path=statistics_path, model_type='classification', buffer_size=256)

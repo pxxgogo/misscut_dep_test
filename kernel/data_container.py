@@ -1,6 +1,6 @@
 import re
 from .model.ngram import ngram
-from .model.prob_model import prob_model
+from .model.prob_model import prob_model, prob_ngram
 from .model.classification.wrapper import Wrapper
 from .model.rnn.wrapper import RNN_wrapper
 import kenlm
@@ -9,6 +9,7 @@ NGRAM_TYPE = 'ngram'
 RNN_TYPE = 'rnn'
 PROB_MODEL_TYPE = 'prob_model'
 CLASSIFICATION_TYPE = "classification"
+PROB_MODEL_NGRAM_TYPE = 'prob_model_ngram'
 RECORD_NUM = 50
 THRESHOLDS = (-14, -6)
 
@@ -39,17 +40,21 @@ class Data_container:
         self._buffer_size = buffer_size
         self._model_type = model_type
         self._main_data_dict = {}
+        self._main_token_rets = {}
         self._test_mode = test_mode
         self._data_ID_tuple = -1
         self.init_debug_ngram_model()
+        self.model = None
+        self.model_2 = None
         if model_type == NGRAM_TYPE:
             self.model = ngram.Ngram()
         elif model_type == RNN_TYPE:
             self.model = RNN_wrapper()
         elif model_type == PROB_MODEL_TYPE:
             self.model = prob_model.ProbModel()
-        else:
-            self.model = None
+        elif model_type == PROB_MODEL_NGRAM_TYPE:
+            self.model = prob_model.ProbModel()
+            self.model_2 = prob_ngram.ProbNgramModel()
 
     def init_buffer(self):
         self._data_buffer = {'data_ID_tuple': [], 'data': []}
@@ -73,7 +78,7 @@ class Data_container:
                 self.ngram_ret_operation(rets)
             elif self._model_type == RNN_TYPE:
                 self.nn_ret_operation(rets)
-            elif self._model_type == PROB_MODEL_TYPE:
+            elif self._model_type == PROB_MODEL_TYPE or self._model_type == PROB_MODEL_NGRAM_TYPE:
                 self.prob_ret_operation(rets)
             else:
                 self.classification_ret_operation(rets)
@@ -87,7 +92,7 @@ class Data_container:
             self.ngram_ret_operation(rets)
         elif self._model_type == RNN_TYPE:
             self.nn_ret_operation(rets)
-        elif self._model_type == PROB_MODEL_TYPE:
+        elif self._model_type == PROB_MODEL_TYPE or self._model_type == PROB_MODEL_NGRAM_TYPE:
             self.prob_ret_operation(rets)
         else:
             self.classification_ret_operation(rets)
@@ -95,6 +100,19 @@ class Data_container:
 
     def feed_main_data(self, main_data, main_data_ID):
         self._main_data_dict[main_data_ID] = main_data
+
+    def feed_tokens_data(self, token_contents, data_ID_tuple):
+        if self._model_type == PROB_MODEL_NGRAM_TYPE:
+            rets = self.model_2.score(token_contents)
+            self._main_token_rets[str(data_ID_tuple)] = rets
+
+    def generate_prob_ngram_rets_log(self, data_ID_tuple):
+        rets = self._main_token_rets[str(data_ID_tuple)]
+        log_str = ""
+        for ret in rets:
+            log_str += "%s-[%d, %d, %d] " % (ret[0], ret[1][0], ret[1][1], ret[1][2])
+        log_str += "\n"
+        return log_str
 
     # data_ID_tuple: [main_data_ID, correct_or_wrong]
     def log_data(self, log_str, data_ID_tuple):
@@ -108,6 +126,8 @@ class Data_container:
                 #     sentence = self._main_data_dict[data_ID_tuple[0]]["wrong_sentence"]
                 # self._log_handle.write("\n\n\n#SENTENCE: %s \n" % sentence)
                 self._log_handle.write(generate_log_sentence(self._main_data_dict[data_ID_tuple[0]], data_ID_tuple[1]))
+                if self._model_type == PROB_MODEL_NGRAM_TYPE:
+                    self._log_handle.write(self.generate_prob_ngram_rets_log(data_ID_tuple))
             self._data_ID_tuple = data_ID_tuple
         self._log_handle.write(log_str)
 
@@ -270,7 +290,7 @@ class Data_container:
                     "0", correct_sentence, correct_word, word_position, correct_scores_str))
 
     def dump_csv_precision(self):
-        if self._model_type == CLASSIFICATION_TYPE:
+        if self._model_type == CLASSIFICATION_TYPE or self._model_type == PROB_MODEL_NGRAM_TYPE:
             return
         elif self._model_type == PROB_MODEL_TYPE:
             self.dump_csv_precision_prob_model()

@@ -71,11 +71,13 @@ def get_tokens(ret_json):
     tokens = []
     tokens.append({'text': '{ROOT}', 'index': (-1, -1), 'POS': 'ROOT'})
     tokens_json = ret_json["tokens"]
+    tokens_content = []
     for token_info in tokens_json:
         tokens.append({'text': token_info["originalText"],
                        'index': (token_info["characterOffsetBegin"], token_info["characterOffsetEnd"]),
                        'POS': token_info["pos"]})
-    return tokens
+        tokens_content.append(token_info["originalText"])
+    return tokens, tokens_content
 
 
 def find_line_No_by_prefix(lines, pattern, line_No):
@@ -125,9 +127,10 @@ def analyze_file(input_file_name, data_container):
     sentence_No = 0
     for line in lines:
         sentence = line.strip()
-        data_container.feed_main_data(sentence, sentence_No)
         ret = get_parsed_ret(sentence)
-        tokens = get_tokens(ret)
+        tokens, token_contents = get_tokens(ret)
+        data_container.feed_main_data(sentence, sentence_No)
+        data_container.feed_tokens_data(token_contents, (sentence_No, 0))
         dependency_tree = build_dependency_tree(ret, tokens)
         # print("#Sentence: %s" % sentence)
         parse_tree(dependency_tree, tokens, (sentence_No, 0), data_container)
