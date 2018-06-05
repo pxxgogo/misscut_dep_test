@@ -7,8 +7,7 @@ from .reader import Reader
 from .data_container import Data_container
 
 
-def analyze_sentence(sentence, sentence_ID_tuple):
-    ret = kernel.get_parsed_ret(sentence)
+def analyze_sentence(sentence, sentence_ID_tuple, ret):
     tokens, token_contents = kernel.get_tokens(ret)
     data_container.feed_tokens_data(token_contents, sentence_ID_tuple)
     dependency_tree = kernel.build_dependency_tree(ret, tokens)
@@ -16,9 +15,16 @@ def analyze_sentence(sentence, sentence_ID_tuple):
 
 
 def operate_data(data, data_No):
+    wrong_ret = kernel.get_parsed_ret(data["wrong_sentence"])
+    if not wrong_ret:
+        return False
+    correct_ret = kernel.get_parsed_ret(data["correct_sentence"])
+    if not correct_ret:
+        return False
     data_container.feed_main_data(data, data_No)
-    analyze_sentence(data["wrong_sentence"], (data_No, 1))
-    analyze_sentence(data["correct_sentence"], (data_No, 0))
+    analyze_sentence(data["wrong_sentence"], (data_No, 1), wrong_ret)
+    analyze_sentence(data["correct_sentence"], (data_No, 0), correct_ret)
+    return True
 
 
 if __name__ == "__main__":
@@ -73,7 +79,11 @@ if __name__ == "__main__":
     for data in reader():
         if data_No % 100 == 0 and data_No != 0:
             print("Having Finished: %d" % data_No, end='\r')
-        operate_data(data, data_No)
+        flag = operate_data(data, data_No)
+        if not flag:
+            print("ERROR")
+            print(data)
+            continue
         data_No += 1
     data_container.feed_data_forced()
     data_container.dump_csv_statistics()

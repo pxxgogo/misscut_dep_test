@@ -118,7 +118,13 @@ def get_parsed_ret(line):
                         url=CORENLP_SERVER_URL)
     # print(ret.content)
     # print()
-    return ret.json()["sentences"][0]
+    try:
+        ret_json = ret.json()["sentences"][0]
+        return ret_json
+    except Exception as e:
+        print(e)
+        return None
+
 
 
 def analyze_file(input_file_name, data_container):
@@ -128,6 +134,8 @@ def analyze_file(input_file_name, data_container):
     for line in lines:
         sentence = line.strip()
         ret = get_parsed_ret(sentence)
+        if not ret:
+            continue
         tokens, token_contents = get_tokens(ret)
         data_container.feed_main_data(sentence, sentence_No)
         data_container.feed_tokens_data(token_contents, (sentence_No, 0))
