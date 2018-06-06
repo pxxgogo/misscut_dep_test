@@ -5,15 +5,15 @@ from scipy.spatial import cKDTree
 SCORE_THRESHOLD = 0.5
 
 class Word_vectors:
-    def __init__(self, fname):
+    def __init__(self, fname, words_num=-1):
         self.word2vector = {}
         self.words = []
         self.vectors = []
         self.kdtree = None
-        self._load_vectors(fname)
+        self._load_vectors(fname, words_num)
         self._build_kdtree()
 
-    def _load_vectors(self, fname, words_num=-1):
+    def _load_vectors(self, fname, words_num):
         fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
         n, d = map(int, fin.readline().split())
         word_No = 0

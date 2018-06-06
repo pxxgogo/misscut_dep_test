@@ -54,7 +54,7 @@ class ProbModel:
 
         self._model_types = {0: "s1", 1: "s2", 2: "s3", 3: "b12", 4: "b13", 5: "b23", 6: "t123"}
         self._single_dep_model_types = {0: "s1", 1: "s2", 2: "b12"}
-        self.word_embedding = Word_vectors(embedding_dir)
+        self.word_embedding = Word_vectors(embedding_dir, 200000)
 
     def get_data(self, data):
         rets = []
@@ -186,9 +186,9 @@ class ProbModel:
         similar_score = 0
         if word_fre_1 <= word_fre_2 <= word_fre_3:
             if scores[14] > 0:
-                similar_words = self.word_embedding.get_closed_words(word_1)
-                for similar_word in similar_words:
-                    modified_word = replace_special_symbols(similar_word)
+                similar_words_info = self.word_embedding.get_closed_words(word_1)
+                for similar_word_info in similar_words_info:
+                    modified_word = replace_special_symbols(similar_word_info[0])
                     key = "%s: %s %s %s" % (dep_key, modified_word, modified_word_2, modified_word_3)
                     value = db.get(key)
                     if value is None:
@@ -198,9 +198,9 @@ class ProbModel:
                     similar_score += score
         elif word_fre_2 <= word_fre_1 <= word_fre_3:
             if scores[13] > 0:
-                similar_words = self.word_embedding.get_closed_words(word_2)
-                for similar_word in similar_words:
-                    modified_word = replace_special_symbols(similar_word)
+                similar_words_info = self.word_embedding.get_closed_words(word_2)
+                for similar_word_info in similar_words_info:
+                    modified_word = replace_special_symbols(similar_word_info[0])
                     key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word, modified_word_3)
                     value = db.get(key)
                     if value is None:
@@ -210,9 +210,9 @@ class ProbModel:
                     similar_score += score
         else:
             if scores[12] > 0:
-                similar_words = self.word_embedding.get_closed_words(word_3)
-                for similar_word in similar_words:
-                    modified_word = replace_special_symbols(similar_word)
+                similar_words_info = self.word_embedding.get_closed_words(word_3)
+                for similar_word_info in similar_words_info:
+                    modified_word = replace_special_symbols(similar_word_info[0])
                     key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word_2, modified_word)
                     value = db.get(key)
                     if value is None:
