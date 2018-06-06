@@ -2,6 +2,7 @@ import plyvel
 import re
 import os
 import struct
+from .word_embedding import Word_vectors
 
 NUMBER_RE_COMPILOR = re.compile(r"[\.-]?\d[0-9\.%-]*")
 NUMBER_TAG = "{{#}}"
@@ -30,7 +31,7 @@ def b_2_i(bytes):
 class ProbModel:
     def __init__(self, deep_model_dir="./model/leveldb/deep", broad_model_dir="./model/leveldb/broad",
                  fre_model_dir="./model/leveldb/word_frequency/word_frequency.db",
-                 single_dep_model_dir="./model/leveldb/single_dep"):
+                 single_dep_model_dir="./model/leveldb/single_dep", embedding_dir="./model/embedding/cc.zh.300.vec"):
         self._deep_dbs = {'s1': plyvel.DB(os.path.join(deep_model_dir, 's1.db')),
                           's2': plyvel.DB(os.path.join(deep_model_dir, 's2.db')),
                           's3': plyvel.DB(os.path.join(deep_model_dir, 's3.db')),
@@ -53,6 +54,7 @@ class ProbModel:
 
         self._model_types = {0: "s1", 1: "s2", 2: "s3", 3: "b12", 4: "b13", 5: "b23", 6: "t123"}
         self._single_dep_model_types = {0: "s1", 1: "s2", 2: "b12"}
+        self.word_embedding = Word_vectors(embedding_dir)
 
     def get_data(self, data):
         rets = []
@@ -84,6 +86,7 @@ class ProbModel:
             score = 0
         else:
             score = b_2_i(value)
+        word_fre_1 = score
         scores.append(score)
 
         key = modified_word_2.encode("utf-8")
@@ -92,6 +95,7 @@ class ProbModel:
             score = 0
         else:
             score = b_2_i(value)
+        word_fre_2 = score
         scores.append(score)
 
         key = modified_word_3.encode("utf-8")
@@ -100,6 +104,7 @@ class ProbModel:
             score = 0
         else:
             score = b_2_i(value)
+        word_fre_3 = score
         scores.append(score)
 
         if type == 0:
@@ -177,4 +182,43 @@ class ProbModel:
             else:
                 score = b_2_i(value)
             scores.append(score)
+        db = dbs['t123']
+        similar_score = 0
+        if word_fre_1 <= word_fre_2 <= word_fre_3:
+            if scores[14] > 0:
+                similar_words = self.word_embedding.get_closed_words(word_1)
+                for similar_word in similar_words:
+                    modified_word = replace_special_symbols(similar_word)
+                    key = "%s: %s %s %s" % (dep_key, modified_word, modified_word_2, modified_word_3)
+                    value = db.get(key)
+                    if value is None:
+                        score = 0
+                    else:
+                        score = b_2_i(value)
+                    similar_score += score
+        elif word_fre_2 <= word_fre_1 <= word_fre_3:
+            if scores[13] > 0:
+                similar_words = self.word_embedding.get_closed_words(word_2)
+                for similar_word in similar_words:
+                    modified_word = replace_special_symbols(similar_word)
+                    key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word, modified_word_3)
+                    value = db.get(key)
+                    if value is None:
+                        score = 0
+                    else:
+                        score = b_2_i(value)
+                    similar_score += score
+        else:
+            if scores[12] > 0:
+                similar_words = self.word_embedding.get_closed_words(word_3)
+                for similar_word in similar_words:
+                    modified_word = replace_special_symbols(similar_word)
+                    key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word_2, modified_word)
+                    value = db.get(key)
+                    if value is None:
+                        score = 0
+                    else:
+                        score = b_2_i(value)
+                    similar_score += score
+        scores.append(similar_score)
         return scores
