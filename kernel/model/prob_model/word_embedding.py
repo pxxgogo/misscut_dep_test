@@ -3,6 +3,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 
 SCORE_THRESHOLD = 0.5
+CACHE_SIZE = 1000
 
 class Word_vectors:
     def __init__(self, fname, words_num=-1):
@@ -12,6 +13,9 @@ class Word_vectors:
         self.kdtree = None
         self._load_vectors(fname, words_num)
         self._build_kdtree()
+        self.cache_similar_words_info = {}
+        self.cache_keys = []
+        self.cache_key_index = 0
 
     def _load_vectors(self, fname, words_num):
         fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
@@ -40,6 +44,8 @@ class Word_vectors:
         return vector
 
     def get_closed_words(self, word_name, k=11):
+        if word_name in self.cache_similar_words_info:
+            return self.cache_similar_words_info[word_name]
         key_word_vector = self.get_word_vector(word_name)
         query = self.kdtree.query(key_word_vector, k)
         indexes = query[1]
@@ -54,4 +60,13 @@ class Word_vectors:
                 rets.append((word, score))
             else:
                 break
+        if self.cache_key_index >= len(self.cache_keys):
+            self.cache_keys.append(word_name)
+            self.cache_similar_words_info[word_name] = rets
+        else:
+            self.cache_similar_words_info.pop(self.cache_keys[self.cache_key_index])
+            self.cache_similar_words_info[word_name] = rets
+            self.cache_keys[self.cache_key_index] = word_name
+        self.cache_key_index += 1
+        self.cache_key_index = self.cache_key_index % CACHE_SIZE
         return rets
