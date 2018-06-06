@@ -43,7 +43,7 @@ class Word_vectors:
         vector = self.word2vector[word]
         return vector
 
-    def get_closed_words(self, word_name, k=11):
+    def get_closed_words(self, word_name, k=30):
         if word_name in self.cache_similar_words_info:
             return self.cache_similar_words_info[word_name]
         key_word_vector = self.get_word_vector(word_name)
