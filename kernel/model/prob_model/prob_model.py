@@ -190,6 +190,7 @@ class ProbModel:
                 for similar_word_info in similar_words_info:
                     modified_word = replace_special_symbols(similar_word_info[0])
                     key = "%s: %s %s %s" % (dep_key, modified_word, modified_word_2, modified_word_3)
+                    key = key.encode("utf-8")
                     value = db.get(key)
                     if value is None:
                         score = 0
@@ -202,6 +203,7 @@ class ProbModel:
                 for similar_word_info in similar_words_info:
                     modified_word = replace_special_symbols(similar_word_info[0])
                     key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word, modified_word_3)
+                    key = key.encode("utf-8")
                     value = db.get(key)
                     if value is None:
                         score = 0
@@ -214,6 +216,7 @@ class ProbModel:
                 for similar_word_info in similar_words_info:
                     modified_word = replace_special_symbols(similar_word_info[0])
                     key = "%s: %s %s %s" % (dep_key, modified_word_1, modified_word_2, modified_word)
+                    key = key.encode("utf-8")
                     value = db.get(key)
                     if value is None:
                         score = 0
