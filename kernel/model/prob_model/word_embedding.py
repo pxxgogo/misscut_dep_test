@@ -39,13 +39,15 @@ class Word_vectors:
         vector = self.word2vector[word]
         return vector
 
-    def get_closed_words(self, word_name, k=10):
+    def get_closed_words(self, word_name, k=11):
         key_word_vector = self.get_word_vector(word_name)
         query = self.kdtree.query(key_word_vector, k)
         indexes = query[1]
         rets = []
         for index in indexes:
             word = self.words[index]
+            if word == word_name:
+                continue
             vector = self.get_word_vector(word)
             score = vector.dot(key_word_vector)
             if score > SCORE_THRESHOLD:
