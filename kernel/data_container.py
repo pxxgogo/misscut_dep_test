@@ -17,7 +17,6 @@ DATA_ID_TUPLE_COMPILER = re.compile("\((\d+), (\d+)\)")
 
 
 def generate_log_sentence(data, data_type):
-    indexes = data["word_position"]
     # correct
     if data_type == 0:
         log_sentence = "\n\n\n#CORRECT SENTENCE: %s \n" % (data["correct_sentence"])
@@ -26,6 +25,7 @@ def generate_log_sentence(data, data_type):
             log_sentence = "\n\n\n#WRONG SENTENCE: %s \n" % (
                     data["wrong_sentence"])
         else:
+            indexes = data["word_position"]
             log_sentence = "\n\n\n#WRONG SENTENCE: %s \n" % (
                     data["wrong_sentence"][:indexes[0]] + "  @" + data["wrong_word"] + "@  " + data["wrong_sentence"][
                                                                                                indexes[1]:])
