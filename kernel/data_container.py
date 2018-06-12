@@ -22,9 +22,13 @@ def generate_log_sentence(data, data_type):
     if data_type == 0:
         log_sentence = "\n\n\n#CORRECT SENTENCE: %s \n" % (data["correct_sentence"])
     else:
-        log_sentence = "\n\n\n#WRONG SENTENCE: %s \n" % (
-                data["wrong_sentence"][:indexes[0]] + "  @" + data["wrong_word"] + "@  " + data["wrong_sentence"][
-                                                                                           indexes[1]:])
+        if data["mistake_type"] in ["7-1", "7-2"]:
+            log_sentence = "\n\n\n#WRONG SENTENCE: %s \n" % (
+                    data["wrong_sentence"])
+        else:
+            log_sentence = "\n\n\n#WRONG SENTENCE: %s \n" % (
+                    data["wrong_sentence"][:indexes[0]] + "  @" + data["wrong_word"] + "@  " + data["wrong_sentence"][
+                                                                                               indexes[1]:])
     return log_sentence
 
 
@@ -301,115 +305,115 @@ class Data_container:
                 ret_str += str(ret) + ", "
         return ret_str
 
-    def dump_csv_statistics(self):
-        if self._test_mode == 1:
-            return
-        for main_data_id, main_data in self._main_data_dict.items():
-            wrong_sentence = main_data["wrong_sentence"]
-            correct_sentence = main_data["correct_sentence"]
-            mistake_type = main_data["mistake_type"]
-            wrong_word = main_data["wrong_word"]
-            correct_word = main_data["correct_word"]
-            word_position = str(main_data["word_position"])
-            correct_scores_str = self.transform_scores_to_str(self._scores.get(str((main_data_id, 0)), []))
-            wrong_scores_str = self.transform_scores_to_str(self._scores.get(str((main_data_id, 1)), []))
-            self._statistics_handle.write(
-                '"%s", "%s", "%s", "%s", %s\n' % (
-                    mistake_type, wrong_sentence, wrong_word, word_position, wrong_scores_str))
-            self._statistics_handle.write(
-                '"%s", "%s", "%s", "%s", %s\n' % (
-                    "0", correct_sentence, correct_word, word_position, correct_scores_str))
-
-    def dump_csv_precision(self):
-        if self._model_type == CLASSIFICATION_TYPE or self._model_type == PROB_MODEL_NGRAM_TYPE:
-            return
-        elif self._model_type == PROB_MODEL_TYPE:
-            self.dump_csv_precision_prob_model()
-            return
-        correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]
-        delta = float(THRESHOLDS[1] - THRESHOLDS[0]) / float(RECORD_NUM)
-        find_num = [0 for i in range(RECORD_NUM)]
-        labels_list = [0 for i in range(RECORD_NUM)]
-        for data_ID_tuple_str, scores in self._scores.items():
-            data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
-            data_flag = int(data_ID_tuple[1])
-            min_score = min(scores)
-            threshold = THRESHOLDS[0] - delta
-            for i in range(RECORD_NUM):
-                threshold += delta
-                labels_list[i] = threshold
-                if min_score < threshold:
-                    find_num[i] += 1
-                    if data_flag == 1:
-                        correct_nums[1][i] += 1
-                else:
-                    if data_flag == 0:
-                        correct_nums[0][i] += 1
-        output_str = ""
-        output_str += "阈值, "
-        main_data_num = len(self._main_data_dict)
-        for label in labels_list:
-            output_str += str(label) + ", "
-        output_str += "\n"
-        output_str += "未误判率：（所有正确的句子中，认为正判的概率）, "
-        for num in correct_nums[0]:
-            precision = float(num) / main_data_num
-            output_str += str(precision) + ", "
-        output_str += "\n"
-        output_str += "召回率：, "
-        for num in correct_nums[1]:
-            precision = float(num) / main_data_num
-            output_str += str(precision) + ", "
-        output_str += "\n"
-        output_str += "准确率：, "
-        for i in range(len(correct_nums[1])):
-            precision = float(correct_nums[1][i]) / find_num[i]
-            output_str += str(precision) + ", "
-        self._precisions_handle.write(output_str)
-
-    def dump_csv_precision_prob_model(self):
-        correct_nums = [[0 for i in range(4)], [0 for i in range(4)]]
-        find_num = [0 for i in range(4)]
-        for data_ID_tuple_str, scores in self._scores.items():
-            data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
-            data_flag = int(data_ID_tuple[1])
-            max_zero_count = 0
-            for sub_scores in scores:
-                zero_count = 0
-                for score in sub_scores:
-                    if score == 0:
-                        zero_count += 1
-                if max_zero_count < zero_count:
-                    max_zero_count = zero_count
-            for i in range(4):
-                zero_threshold = i + 1
-                if max_zero_count >= zero_threshold:
-                    find_num[i] += 1
-                    if data_flag == 1:
-                        correct_nums[1][i] += 1
-                else:
-                    if data_flag == 0:
-                        correct_nums[0][i] += 1
-
-        labels_list = [i + 1 for i in range(4)]
-        output_str = ""
-        output_str += "0数阈值, "
-        main_data_num = len(self._main_data_dict)
-        for label in labels_list:
-            output_str += str(label) + ", "
-        output_str += "\n"
-        output_str += "未误判率：（所有正确的句子中，认为正判的概率）, "
-        for num in correct_nums[0]:
-            precision = float(num) / main_data_num
-            output_str += str(precision) + ", "
-        output_str += "\n"
-        output_str += "召回率：, "
-        for num in correct_nums[1]:
-            precision = float(num) / main_data_num
-            output_str += str(precision) + ", "
-        output_str += "\n"
-        output_str += "准确率：, "
-        for i in range(len(correct_nums[1])):
-            precision = float(correct_nums[1][i]) / find_num[i]
-            output_str += str(precision) + ", "
-        self._precisions_handle.write(output_str)
+    # def dump_csv_statistics(self):
+    #     if self._test_mode == 1:
+    #         return
+    #     for main_data_id, main_data in self._main_data_dict.items():
+    #         wrong_sentence = main_data["wrong_sentence"]
+    #         correct_sentence = main_data["correct_sentence"]
+    #         mistake_type = main_data["mistake_type"]
+    #         wrong_word = main_data["wrong_word"]
+    #         correct_word = main_data["correct_word"]
+    #         word_position = str(main_data["word_position"])
+    #         correct_scores_str = self.transform_scores_to_str(self._scores.get(str((main_data_id, 0)), []))
+    #         wrong_scores_str = self.transform_scores_to_str(self._scores.get(str((main_data_id, 1)), []))
+    #         self._statistics_handle.write(
+    #             '"%s", "%s", "%s", "%s", %s\n' % (
+    #                 mistake_type, wrong_sentence, wrong_word, word_position, wrong_scores_str))
+    #         self._statistics_handle.write(
+    #             '"%s", "%s", "%s", "%s", %s\n' % (
+    #                 "0", correct_sentence, correct_word, word_position, correct_scores_str))
+    #
+    # def dump_csv_precision(self):
+    #     if self._model_type == CLASSIFICATION_TYPE or self._model_type == PROB_MODEL_NGRAM_TYPE:
+    #         return
+    #     elif self._model_type == PROB_MODEL_TYPE:
+    #         self.dump_csv_precision_prob_model()
+    #         return
+    #     correct_nums = [[0 for i in range(RECORD_NUM)], [0 for i in range(RECORD_NUM)]]
+    #     delta = float(THRESHOLDS[1] - THRESHOLDS[0]) / float(RECORD_NUM)
+    #     find_num = [0 for i in range(RECORD_NUM)]
+    #     labels_list = [0 for i in range(RECORD_NUM)]
+    #     for data_ID_tuple_str, scores in self._scores.items():
+    #         data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
+    #         data_flag = int(data_ID_tuple[1])
+    #         min_score = min(scores)
+    #         threshold = THRESHOLDS[0] - delta
+    #         for i in range(RECORD_NUM):
+    #             threshold += delta
+    #             labels_list[i] = threshold
+    #             if min_score < threshold:
+    #                 find_num[i] += 1
+    #                 if data_flag == 1:
+    #                     correct_nums[1][i] += 1
+    #             else:
+    #                 if data_flag == 0:
+    #                     correct_nums[0][i] += 1
+    #     output_str = ""
+    #     output_str += "阈值, "
+    #     main_data_num = len(self._main_data_dict)
+    #     for label in labels_list:
+    #         output_str += str(label) + ", "
+    #     output_str += "\n"
+    #     output_str += "未误判率：（所有正确的句子中，认为正判的概率）, "
+    #     for num in correct_nums[0]:
+    #         precision = float(num) / main_data_num
+    #         output_str += str(precision) + ", "
+    #     output_str += "\n"
+    #     output_str += "召回率：, "
+    #     for num in correct_nums[1]:
+    #         precision = float(num) / main_data_num
+    #         output_str += str(precision) + ", "
+    #     output_str += "\n"
+    #     output_str += "准确率：, "
+    #     for i in range(len(correct_nums[1])):
+    #         precision = float(correct_nums[1][i]) / find_num[i]
+    #         output_str += str(precision) + ", "
+    #     self._precisions_handle.write(output_str)
+    #
+    # def dump_csv_precision_prob_model(self):
+    #     correct_nums = [[0 for i in range(4)], [0 for i in range(4)]]
+    #     find_num = [0 for i in range(4)]
+    #     for data_ID_tuple_str, scores in self._scores.items():
+    #         data_ID_tuple = DATA_ID_TUPLE_COMPILER.findall(data_ID_tuple_str)[0]
+    #         data_flag = int(data_ID_tuple[1])
+    #         max_zero_count = 0
+    #         for sub_scores in scores:
+    #             zero_count = 0
+    #             for score in sub_scores:
+    #                 if score == 0:
+    #                     zero_count += 1
+    #             if max_zero_count < zero_count:
+    #                 max_zero_count = zero_count
+    #         for i in range(4):
+    #             zero_threshold = i + 1
+    #             if max_zero_count >= zero_threshold:
+    #                 find_num[i] += 1
+    #                 if data_flag == 1:
+    #                     correct_nums[1][i] += 1
+    #             else:
+    #                 if data_flag == 0:
+    #                     correct_nums[0][i] += 1
+    #
+    #     labels_list = [i + 1 for i in range(4)]
+    #     output_str = ""
+    #     output_str += "0数阈值, "
+    #     main_data_num = len(self._main_data_dict)
+    #     for label in labels_list:
+    #         output_str += str(label) + ", "
+    #     output_str += "\n"
+    #     output_str += "未误判率：（所有正确的句子中，认为正判的概率）, "
+    #     for num in correct_nums[0]:
+    #         precision = float(num) / main_data_num
+    #         output_str += str(precision) + ", "
+    #     output_str += "\n"
+    #     output_str += "召回率：, "
+    #     for num in correct_nums[1]:
+    #         precision = float(num) / main_data_num
+    #         output_str += str(precision) + ", "
+    #     output_str += "\n"
+    #     output_str += "准确率：, "
+    #     for i in range(len(correct_nums[1])):
+    #         precision = float(correct_nums[1][i]) / find_num[i]
+    #         output_str += str(precision) + ", "
+    #     self._precisions_handle.write(output_str)

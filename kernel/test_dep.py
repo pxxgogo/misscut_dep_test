@@ -35,11 +35,14 @@ if __name__ == "__main__":
     parser.add_argument('--model_flag', type=int, default=0)
     parser.add_argument('--statistics_name', type=str, default="statistics.csv")
     parser.add_argument('--precision_log_name', type=str, default="precisions.csv")
+    parser.add_argument('--data_type', type=int, default=0)
+
     args = parser.parse_args()
     log_name = args.log_name
     output_dir = args.output_dir
     input_path = args.input_path
     model_flag = args.model_flag
+    data_type = args.data_type
     statistics_name = args.statistics_name
     precision_log_name = args.precision_log_name
     file_num = 0
@@ -73,7 +76,7 @@ if __name__ == "__main__":
     else:
         data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
                                         statistics_path=statistics_path, model_type='classification', buffer_size=256)
-    reader = Reader(input_path)
+    reader = Reader(input_path, data_type)
     data_No = 0
 
     for data in reader():
@@ -86,6 +89,6 @@ if __name__ == "__main__":
             continue
         data_No += 1
     data_container.feed_data_forced()
-    data_container.dump_csv_statistics()
-    data_container.dump_csv_precision()
+    # data_container.dump_csv_statistics()
+    # data_container.dump_csv_precision()
     data_container.close_all_handles()
