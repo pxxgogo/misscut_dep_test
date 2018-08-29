@@ -8,7 +8,7 @@ from .reader import Reader
 from .data_container import Data_container
 
 PARSING_BUFFER_SIZE = 100
-CUT_FLAG_REG = re.compile('[，,。！!？\?……：:；;\n\r —]+')
+CUT_FLAG_REG = re.compile('[，,。！!？\?……：:；;\n\r —\.]+')
 
 
 def analyze_sentence(sentence_ID_tuple, ret):
