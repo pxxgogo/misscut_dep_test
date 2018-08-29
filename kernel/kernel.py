@@ -110,7 +110,7 @@ def build_dependency_tree(ret_json, tokens):
     return dependency_tree
 
 
-def get_parsed_ret(para):
+def get_parsed_rets(para):
     properties = '{"annotators":"tokenize,ssplit,pos,depparse","outputFormat":"json","ssplit.newlineIsSentenceBreak":"always"}'
     # print(line)
     ret = requests.post(data=para.encode("utf-8"), params={"properties": properties, "pipelineLanguage": "zh"},
@@ -119,6 +119,20 @@ def get_parsed_ret(para):
     # print()
     try:
         ret_json = ret.json()["sentences"]
+        return ret_json
+    except Exception as e:
+        print(e)
+        return None
+
+def get_parsed_ret(line):
+    properties = '{"annotators":"tokenize,ssplit,pos,depparse","outputFormat":"json","ssplit.newlineIsSentenceBreak":"always"}'
+    # print(line)
+    ret = requests.post(data=line.encode("utf-8"), params={"properties": properties, "pipelineLanguage": "zh"},
+                        url=CORENLP_SERVER_URL)
+    # print(ret.content)
+    # print()
+    try:
+        ret_json = ret.json()["sentences"][0]
         return ret_json
     except Exception as e:
         print(e)
@@ -140,7 +154,8 @@ def analyze_file(input_file_name, data_container):
         buffer_index += 1
         if buffer_index == 100:
             para = "\n".join(parsing_sentences)
-            rets = get_parsed_ret(para)
+            rets = get_parsed_rets(para)
+
             if not rets:
                 continue
             for ret in rets:
