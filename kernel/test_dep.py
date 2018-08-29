@@ -1,12 +1,15 @@
 import argparse
 import json
 import os
+import re
 
 from . import kernel
 from .reader import Reader
 from .data_container import Data_container
 
 PARSING_BUFFER_SIZE = 100
+CUT_FLAG_REG = re.compile('[，,。！!？\?……：:；;\n\r —]+')
+
 
 def analyze_sentence(sentence_ID_tuple, ret):
     tokens, token_contents = kernel.get_tokens(ret)
@@ -26,6 +29,27 @@ def operate_data(data, data_No):
     analyze_sentence((data_No, 1), wrong_ret)
     analyze_sentence((data_No, 0), correct_ret)
     return True
+
+def check_data(data):
+    sentence = data["wrong_sentence"]
+    items = CUT_FLAG_REG.split(sentence)
+    ignorant_num = 0
+    if items[-1] == "":
+        ignorant_num = 1
+    size = len(items) - ignorant_num
+    if size != 1:
+        return False
+    sentence = data["good_sentence"]
+    items = CUT_FLAG_REG.split(sentence)
+    ignorant_num = 0
+    if items[-1] == "":
+        ignorant_num = 1
+    size = len(items) - ignorant_num
+    if size != 1:
+        return False
+    return True
+
+
 
 
 if __name__ == "__main__":
@@ -83,6 +107,8 @@ if __name__ == "__main__":
     data_No_buffer = []
     sentence_buffer = []
     for data in reader():
+        if not check_data(data):
+            continue
         sentence_buffer.append(data["wrong_sentence"])
         sentence_buffer.append(data["correct_sentence"])
         data_No_buffer.append((data_No, 1))
