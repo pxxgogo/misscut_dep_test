@@ -92,8 +92,14 @@ if __name__ == "__main__":
         if buffer_index >= PARSING_BUFFER_SIZE:
             para = "\n".join(sentence_buffer)
             rets = kernel.get_parsed_rets(para)
-            if not rets or len(rets) != len(sentence_buffer):
+            if not rets:
                 print(para)
+                sentence_buffer = []
+                data_No_buffer = []
+                buffer_index = 0
+                continue
+            if len(rets) != len(sentence_buffer):
+                print(len(rets), len(sentence_buffer))
                 sentence_buffer = []
                 data_No_buffer = []
                 buffer_index = 0
