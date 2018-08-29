@@ -4,6 +4,7 @@ import os
 import struct
 import json
 import redis
+import sys
 
 NUMBER_RE_COMPILOR = re.compile(r"[\.-]?\d[0-9\.%-]*")
 NUMBER_TAG = "{{#}}"
