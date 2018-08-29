@@ -39,7 +39,7 @@ def check_data(data):
     size = len(items) - ignorant_num
     if size != 1:
         return False
-    sentence = data["good_sentence"]
+    sentence = data["correct_sentence"]
     items = CUT_FLAG_REG.split(sentence)
     ignorant_num = 0
     if items[-1] == "":
