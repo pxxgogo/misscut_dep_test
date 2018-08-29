@@ -110,39 +110,49 @@ def build_dependency_tree(ret_json, tokens):
     return dependency_tree
 
 
-def get_parsed_ret(line):
-    properties = '{"annotators":"tokenize,ssplit,pos,depparse","outputFormat":"json"}'
+def get_parsed_ret(para):
+    properties = '{"annotators":"tokenize,ssplit,pos,depparse","outputFormat":"json","ssplit.newlineIsSentenceBreak":"always"}'
     # print(line)
-    data = line
-    ret = requests.post(data=data.encode("utf-8"), params={"properties": properties, "pipelineLanguage": "zh"},
+    ret = requests.post(data=para.encode("utf-8"), params={"properties": properties, "pipelineLanguage": "zh"},
                         url=CORENLP_SERVER_URL)
     # print(ret.content)
     # print()
     try:
-        ret_json = ret.json()["sentences"][0]
+        ret_json = ret.json()["sentences"]
         return ret_json
     except Exception as e:
         print(e)
         return None
 
 
+PARSING_BUFFER_SIZE = 100
+
 
 def analyze_file(input_file_name, data_container):
     with open(input_file_name) as file_handle:
         lines = file_handle.readlines()
     sentence_No = 0
+    buffer_index = 0
+    parsing_sentences = []
     for line in lines:
         sentence = line.strip()
-        ret = get_parsed_ret(sentence)
-        if not ret:
-            continue
-        tokens, token_contents = get_tokens(ret)
-        data_container.feed_main_data(sentence, sentence_No)
-        data_container.feed_tokens_data(token_contents, (sentence_No, 0))
-        dependency_tree = build_dependency_tree(ret, tokens)
-        # print("#Sentence: %s" % sentence)
-        parse_tree(dependency_tree, tokens, (sentence_No, 0), data_container)
-        sentence_No += 1
+        parsing_sentences.append(sentence)
+        buffer_index += 1
+        if buffer_index == 100:
+            para = "\n".join(parsing_sentences)
+            rets = get_parsed_ret(para)
+            if not rets:
+                continue
+            for ret in rets:
+                tokens, token_contents = get_tokens(ret)
+                data_container.feed_main_data(sentence, sentence_No)
+                data_container.feed_tokens_data(token_contents, (sentence_No, 0))
+                dependency_tree = build_dependency_tree(ret, tokens)
+                # print("#Sentence: %s" % sentence)
+                parse_tree(dependency_tree, tokens, (sentence_No, 0), data_container)
+                sentence_No += 1
+            parsing_sentences = []
+            buffer_index = 0
 
 
 if __name__ == '__main__':
