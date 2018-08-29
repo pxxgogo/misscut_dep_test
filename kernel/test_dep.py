@@ -6,8 +6,9 @@ from . import kernel
 from .reader import Reader
 from .data_container import Data_container
 
+PARSING_BUFFER_SIZE = 100
 
-def analyze_sentence(sentence, sentence_ID_tuple, ret):
+def analyze_sentence(sentence_ID_tuple, ret):
     tokens, token_contents = kernel.get_tokens(ret)
     data_container.feed_tokens_data(token_contents, sentence_ID_tuple)
     dependency_tree = kernel.build_dependency_tree(ret, tokens)
@@ -22,8 +23,8 @@ def operate_data(data, data_No):
     if not correct_ret:
         return False
     data_container.feed_main_data(data, data_No)
-    analyze_sentence(data["wrong_sentence"], (data_No, 1), wrong_ret)
-    analyze_sentence(data["correct_sentence"], (data_No, 0), correct_ret)
+    analyze_sentence((data_No, 1), wrong_ret)
+    analyze_sentence((data_No, 0), correct_ret)
     return True
 
 
@@ -78,16 +79,33 @@ if __name__ == "__main__":
                                         statistics_path=statistics_path, model_type='classification', buffer_size=256)
     reader = Reader(input_path, data_type)
     data_No = 0
-
+    buffer_index = 0
+    data_No_buffer = []
+    sentence_buffer = []
     for data in reader():
-        if data_No % 100 == 0 and data_No != 0:
-            print("Having Finished: %d" % data_No, end='\r')
-        flag = operate_data(data, data_No)
-        if not flag:
-            print("ERROR")
-            print(data)
-            continue
+        sentence_buffer.append(data["wrong_sentence"])
+        sentence_buffer.append(data["correct_sentence"])
+        data_No_buffer.append((data_No, 1))
+        data_No_buffer.append((data_No, 0))
+        buffer_index += 2
         data_No += 1
+        if buffer_index >= PARSING_BUFFER_SIZE:
+            para = "\n".join(sentence_buffer)
+            rets = kernel.get_parsed_rets(para)
+            if not rets or len(rets) != len(sentence_buffer):
+                print(para)
+                sentence_buffer = []
+                data_No_buffer = []
+                buffer_index = 0
+                continue
+            for ret, data_No_tuple in zip(rets, data_No_buffer):
+                if data_No_tuple[1] == 1:
+                    data_container.feed_main_data(data, data_No_tuple[0])
+                analyze_sentence(data_No_tuple, ret)
+            sentence_buffer = []
+            data_No_buffer = []
+            buffer_index = 0
+            print("Having Finished: %d" % data_No, end='\r')
     data_container.feed_data_forced()
     # data_container.dump_csv_statistics()
     # data_container.dump_csv_precision()
