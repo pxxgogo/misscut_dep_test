@@ -113,8 +113,19 @@ def build_dependency_tree(ret_json, tokens):
 def get_parsed_rets(para):
     properties = '{"annotators":"tokenize,ssplit,pos,depparse","outputFormat":"json","ssplit.newlineIsSentenceBreak":"always"}'
     # print(line)
-    ret = requests.post(data=para.encode("utf-8"), params={"properties": properties, "pipelineLanguage": "zh"},
-                        url=CORENLP_SERVER_URL)
+    try_num = 0
+    while try_num < 10:
+        try:
+            ret = requests.post(data=para.encode("utf-8"), params={"properties": properties, "pipelineLanguage": "zh"},
+                                url=CORENLP_SERVER_URL)
+        except Exception as e:
+            try_num += 1
+            print(e)
+            continue
+        break
+    if try_num >= 10:
+        print("Error with one para")
+        return None
     # print(ret.content)
     # print()
     try:
