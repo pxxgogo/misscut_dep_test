@@ -2,7 +2,8 @@ import re
 
 POSITION_COMPILER = re.compile("\[(\d+),(\d+)\]")
 
-IGNORE_TYPES = ["3-1", "3-2"]
+IGNORE_TYPES = []
+# IGNORE_TYPES = ["3-1", "3-2"]
 
 class Reader:
     def __init__(self, file_path, data_type):
