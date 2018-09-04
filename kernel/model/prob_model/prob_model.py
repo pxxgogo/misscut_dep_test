@@ -5,6 +5,8 @@ import struct
 import json
 import redis
 import sys
+from kernel.model.prob_model.word_embedding import Word_vectors
+import numpy as np
 
 NUMBER_RE_COMPILOR = re.compile(r"[\.-]?\d[0-9\.%-]*")
 NUMBER_TAG = "{{#}}"
@@ -12,8 +14,9 @@ NUMBER_TAG_LENGTH = len(NUMBER_TAG)
 LETTER_RE_COMPILOR = re.compile(r"[a-zA-Z][a-zA-Z\.'-]*")
 LETTER_TAG = "{{E}}"
 LETTER_TAG_LENGTH = len(LETTER_TAG)
-CONFIG_DIR = "/home/misscut/app/MissCut-V7/system/config.json"
+CONFIG_DIR = "kernel/config.json"
 FAST_STAT_DB_FLAG = 2
+SMOOTH_THRESHOLD = 0.4
 
 
 def replace_special_symbols(sentence):
@@ -31,12 +34,13 @@ def b_2_i(bytes):
     # print(bytes, struct.unpack(">q", bytes))
     return struct.unpack(">q", bytes)[0]
 
+
 def b_2_i_redis(bytes):
     index = len(bytes) - 1
     seed = 1
     ret = 0
     while index >= 0:
-        ret += seed * (bytes[index]-48)
+        ret += seed * (bytes[index] - 48)
         seed *= 10
         index -= 1
     return ret
@@ -92,6 +96,9 @@ class ProbModel:
             self._prob_cpp_db.load_model(os.path.join(config["cpp_stat_model_dir"], config["cpp_stat_model_name"]))
         self._model_types = {0: "s1", 1: "s2", 2: "s3", 3: "b12", 4: "b13", 5: "b23", 6: "t123"}
         self._single_dep_model_types = {0: "s-s1", 1: "s-s2", 2: "s-b12"}
+
+        word_embedding_dir = config["word_embedding_dir"]
+        self._word_embedding = Word_vectors(word_embedding_dir)
         # self._fast_db_timer = 0
         # self._all_db_timer = 0
         # self._fast_db_times = 0
@@ -144,6 +151,33 @@ class ProbModel:
         else:
             score = b_2_i(value)
         return score
+
+    def get_smooth_score(self, dep_key, model_type_No, modified_words):
+        if model_type_No == 3:
+            key = "%s: %s %s .*" % (dep_key, modified_words[0], modified_words[1])
+            vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[2])
+        elif model_type_No == 4:
+            key = "%s: %s .* %s" % (dep_key, modified_words[0], modified_words[2])
+            vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[1])
+        elif model_type_No == 5:
+            key = "%s: .* %s %s" % (dep_key, modified_words[1], modified_words[2])
+            vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[0])
+        else:
+            key = ""
+            main_vector = -1
+            vector_flag = False
+        if not vector_flag:
+            return 0
+        rets = self._prob_cpp_db.search(key)
+        ret_score = 0
+        for ret in rets:
+            word = ret[0]
+            vector_flag, vector = self._word_embedding.get_word_vector(word)
+            if vector_flag:
+                similar_value = vector.dot(main_vector)
+                if similar_value > SMOOTH_THRESHOLD:
+                    ret_score += ret[1]
+        return ret_score
 
     def _score(self, db_main_type_No, word_1_info, label_1, word_2_info, label_2, word_3_info):
         dep_key = "%s %s" % (label_1, label_2)
@@ -206,6 +240,8 @@ class ProbModel:
                 score = self._get_value(key, db_type)
                 scores.append(score)
 
+        smooth_compare_score = -1
+        smooth_model_type_No = 0
         for model_type_No in range(7):
             if model_type_No == 0:
                 key = "%s: %s" % (dep_key, modified_word_1)
@@ -230,8 +266,16 @@ class ProbModel:
                 db_type = "b-" + db_sub_type
             score = self._get_value(key, db_type)
             scores.append(score)
+            # about smooth
+            if model_type_No in [3, 4, 5] and score > smooth_compare_score:
+                smooth_compare_score = score
+                smooth_model_type_No = model_type_No
+        if smooth_compare_score == 0:
+            scores.append(0)
+            return scores
+        score = self.get_smooth_score(dep_key, smooth_model_type_No, (modified_word_1, modified_word_2, modified_word_3))
+        scores.append(score)
         return scores
-
 
     # def init_timer(self):
     #     self._fast_db_timer = self._all_db_timer = 0
@@ -252,5 +296,3 @@ class ProbModel:
         modified_word = replace_special_symbols(word)
         score = self._get_value(modified_word, 'fre')
         return score
-
-

@@ -9,3 +9,4 @@ model/**
 **.swp
 test_results/**
 *ipynb*
+.DS_Store
