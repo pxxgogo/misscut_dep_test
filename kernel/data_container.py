@@ -287,7 +287,10 @@ class Data_container:
                 elif model_type == 14:
                     log_str += "X\t%s\t%s\t[%d]; \n" % (word_2, word_3, ret[model_type])
                 elif model_type == 15:
-                    log_str += "%s\t%s\t%s\t[%d]; \n\n" % (word_1, word_2, word_3, ret[model_type])
+                    log_str += "%s\t%s\t%s\t[%d]; \n" % (word_1, word_2, word_3, ret[model_type])
+                elif model_type == 16:
+                    log_str += "%s\t%s\t%s\t[%d]*; \n\n" % (word_1, word_2, word_3, ret[model_type])
+
 
             self.log_data(log_str, data_ID_tuple)
             data_ID_tuple_str = str(data_ID_tuple)
