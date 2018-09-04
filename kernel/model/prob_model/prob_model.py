@@ -14,7 +14,7 @@ NUMBER_TAG_LENGTH = len(NUMBER_TAG)
 LETTER_RE_COMPILOR = re.compile(r"[a-zA-Z][a-zA-Z\.'-]*")
 LETTER_TAG = "{{E}}"
 LETTER_TAG_LENGTH = len(LETTER_TAG)
-CONFIG_DIR = "kernel/config.json"
+CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
 SMOOTH_THRESHOLD = 0.4
 
