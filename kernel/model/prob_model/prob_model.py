@@ -152,15 +152,19 @@ class ProbModel:
             score = b_2_i(value)
         return score
 
-    def get_smooth_score(self, dep_key, model_type_No, modified_words):
+    def get_smooth_score(self, db_main_type_No, dep_key, model_type_No, modified_words):
+        if db_main_type_No == 0:
+            main_key = "d-t123"
+        else:
+            main_key = "b-t123"
         if model_type_No == 3:
-            key = "%s: %s %s .*" % (dep_key, modified_words[0], modified_words[1])
+            key = "%s %s: %s %s .*" % (main_key, dep_key, modified_words[0], modified_words[1])
             vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[2])
         elif model_type_No == 4:
-            key = "%s: %s .* %s" % (dep_key, modified_words[0], modified_words[2])
+            key = "%s %s: %s .* %s" % (main_key, dep_key, modified_words[0], modified_words[2])
             vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[1])
         elif model_type_No == 5:
-            key = "%s: .* %s %s" % (dep_key, modified_words[1], modified_words[2])
+            key = "%s %s: .* %s %s" % (main_key, dep_key, modified_words[1], modified_words[2])
             vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[0])
         else:
             key = ""
@@ -273,7 +277,7 @@ class ProbModel:
         if smooth_compare_score == 0:
             scores.append(0)
             return scores
-        score = self.get_smooth_score(dep_key, smooth_model_type_No, (modified_word_1, modified_word_2, modified_word_3))
+        score = self.get_smooth_score(db_main_type_No, dep_key, smooth_model_type_No, (modified_word_1, modified_word_2, modified_word_3))
         scores.append(score)
         return scores
 
