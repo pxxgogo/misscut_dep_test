@@ -125,6 +125,7 @@ if __name__ == "__main__":
         if test_No == 100:
             pr.disable()
             pr.print_stats()
+            pr.dump_stats("profile.dp")
             exit()
         if buffer_index >= PARSING_BUFFER_SIZE:
             para = "\n".join(sentence_buffer)
