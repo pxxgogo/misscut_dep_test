@@ -172,7 +172,8 @@ class ProbModel:
             vector_flag = False
         if not vector_flag:
             return 0
-        rets = self._prob_cpp_db.search(key)
+        rets = []
+        self._prob_cpp_db.search(key, rets)
         ret_score = 0
         for ret in rets:
             word = ret[0]
