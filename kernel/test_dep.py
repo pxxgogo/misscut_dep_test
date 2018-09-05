@@ -108,9 +108,9 @@ if __name__ == "__main__":
     data_No_buffer = []
     sentence_buffer = []
 
-    test_No = 0
-    pr = cProfile.Profile()
-    pr.enable()
+    # test_No = 0
+    # pr = cProfile.Profile()
+    # pr.enable()
 
     for data in reader():
         if not check_data(data):
@@ -121,12 +121,12 @@ if __name__ == "__main__":
         data_No_buffer.append((data_No, 0))
         buffer_index += 2
         data_No += 1
-        test_No += 1
-        if test_No == 100:
-            pr.disable()
-            pr.print_stats()
-            pr.dump_stats("profile.dp")
-            exit()
+        # test_No += 1
+        # if test_No == 100:
+        #     pr.disable()
+        #     pr.print_stats()
+        #     pr.dump_stats("profile.dp")
+        #     exit()
         if buffer_index >= PARSING_BUFFER_SIZE:
             para = "\n".join(sentence_buffer)
             rets = kernel.get_parsed_rets(para)
