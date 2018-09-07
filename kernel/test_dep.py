@@ -62,6 +62,8 @@ if __name__ == "__main__":
     parser.add_argument('--statistics_name', type=str, default="statistics.csv")
     parser.add_argument('--precision_log_name', type=str, default="precisions.csv")
     parser.add_argument('--data_type', type=int, default=0)
+    parser.add_argument('--c_w_data_chosen_flag', type=int, default=0)
+
 
     args = parser.parse_args()
     log_name = args.log_name
@@ -71,6 +73,7 @@ if __name__ == "__main__":
     data_type = args.data_type
     statistics_name = args.statistics_name
     precision_log_name = args.precision_log_name
+    c_w_data_chosen_flag = args.c_w_data_chosen_flag
     file_num = 0
     if not input_path.endswith('.out') and not input_path.endswith('.txt'):
         exit()
@@ -107,6 +110,7 @@ if __name__ == "__main__":
     buffer_index = 0
     data_No_buffer = []
     sentence_buffer = []
+    pre_data_No = -1
 
     # test_No = 0
     # pr = cProfile.Profile()
@@ -115,11 +119,16 @@ if __name__ == "__main__":
     for data in reader():
         if not check_data(data):
             continue
-        sentence_buffer.append(data["wrong_sentence"])
-        sentence_buffer.append(data["correct_sentence"])
-        data_No_buffer.append((data_No, 1))
-        data_No_buffer.append((data_No, 0))
-        buffer_index += 2
+        if c_w_data_chosen_flag in [0, 2]:
+            sentence_buffer.append(data["wrong_sentence"])
+            data_No_buffer.append((data_No, 1))
+            buffer_index += 1
+
+        if c_w_data_chosen_flag in [0, 1]:
+            sentence_buffer.append(data["correct_sentence"])
+            data_No_buffer.append((data_No, 0))
+            buffer_index += 1
+
         data_No += 1
         # test_No += 1
         # if test_No == 100:
@@ -143,8 +152,9 @@ if __name__ == "__main__":
                 buffer_index = 0
                 continue
             for ret, data_No_tuple in zip(rets, data_No_buffer):
-                if data_No_tuple[1] == 1:
+                if data_No_tuple[0] != pre_data_No:
                     data_container.feed_main_data(data, data_No_tuple[0])
+                    pre_data_No = data_No_buffer[0]
                 analyze_sentence(data_No_tuple, ret)
             sentence_buffer = []
             data_No_buffer = []
