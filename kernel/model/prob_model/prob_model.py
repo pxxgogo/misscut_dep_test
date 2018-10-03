@@ -17,6 +17,7 @@ LETTER_TAG_LENGTH = len(LETTER_TAG)
 CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
 SMOOTH_THRESHOLD = 0.4
+SMOOTH_FLAG = False
 
 
 def replace_special_symbols(sentence):
@@ -275,7 +276,7 @@ class ProbModel:
             if model_type_No in [3, 4, 5] and score > smooth_compare_score:
                 smooth_compare_score = score
                 smooth_model_type_No = model_type_No
-        if smooth_compare_score == 0:
+        if smooth_compare_score == 0 or not SMOOTH_FLAG:
             scores.append(0)
             return scores
         score = self.get_smooth_score(db_main_type_No, dep_key, smooth_model_type_No, (modified_word_1, modified_word_2, modified_word_3))
