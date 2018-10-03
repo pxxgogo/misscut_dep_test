@@ -98,8 +98,9 @@ class ProbModel:
         self._model_types = {0: "s1", 1: "s2", 2: "s3", 3: "b12", 4: "b13", 5: "b23", 6: "t123"}
         self._single_dep_model_types = {0: "s-s1", 1: "s-s2", 2: "s-b12"}
 
-        word_embedding_dir = config["word_embedding_dir"]
-        self._word_embedding = Word_vectors(word_embedding_dir)
+        if SMOOTH_FLAG:
+            word_embedding_dir = config["word_embedding_dir"]
+            self._word_embedding = Word_vectors(word_embedding_dir)
         # self._fast_db_timer = 0
         # self._all_db_timer = 0
         # self._fast_db_times = 0
