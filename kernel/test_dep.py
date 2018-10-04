@@ -110,6 +110,7 @@ if __name__ == "__main__":
     buffer_index = 0
     data_No_buffer = []
     sentence_buffer = []
+    data_buffer = []
     pre_data_No = -1
 
     # test_No = 0
@@ -122,11 +123,13 @@ if __name__ == "__main__":
         if c_w_data_chosen_flag in [0, 2]:
             sentence_buffer.append(data["wrong_sentence"])
             data_No_buffer.append((data_No, 1))
+            data_buffer.append(data)
             buffer_index += 1
 
         if c_w_data_chosen_flag in [0, 1]:
             sentence_buffer.append(data["correct_sentence"])
             data_No_buffer.append((data_No, 0))
+            data_buffer.append(data)
             buffer_index += 1
 
         data_No += 1
@@ -143,21 +146,24 @@ if __name__ == "__main__":
                 print(para)
                 sentence_buffer = []
                 data_No_buffer = []
+                data_buffer = []
                 buffer_index = 0
                 continue
             if len(rets) != len(sentence_buffer):
                 print(len(rets), len(sentence_buffer))
                 sentence_buffer = []
                 data_No_buffer = []
+                data_buffer = []
                 buffer_index = 0
                 continue
-            for ret, data_No_tuple in zip(rets, data_No_buffer):
+            for ret, data_No_tuple, key_data in zip(rets, data_No_buffer, data_buffer):
                 if data_No_tuple[0] != pre_data_No:
-                    data_container.feed_main_data(data, data_No_tuple[0])
+                    data_container.feed_main_data(key_data, data_No_tuple[0])
                     pre_data_No = data_No_buffer[0]
                 analyze_sentence(data_No_tuple, ret)
             sentence_buffer = []
             data_No_buffer = []
+            data_buffer = []
             buffer_index = 0
             print("Having Finished: %d" % data_No, end='\r')
     data_container.feed_data_forced()
