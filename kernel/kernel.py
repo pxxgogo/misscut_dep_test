@@ -72,9 +72,13 @@ def get_tokens(ret_json):
     tokens.append({'text': '{ROOT}', 'index': (-1, -1), 'POS': 'ROOT'})
     tokens_json = ret_json["tokens"]
     tokens_content = []
+    first_word_posi = -1
     for token_info in tokens_json:
+        if first_word_posi < 0:
+            first_word_posi = token_info["characterOffsetBegin"]
         tokens.append({'text': token_info["originalText"],
-                       'index': (token_info["characterOffsetBegin"], token_info["characterOffsetEnd"]),
+                       'index': [token_info["characterOffsetBegin"] - first_word_posi,
+                                 token_info["characterOffsetEnd"] - first_word_posi],
                        'POS': token_info["pos"]})
         tokens_content.append(token_info["originalText"])
     return tokens, tokens_content
@@ -134,6 +138,7 @@ def get_parsed_rets(para):
     except Exception as e:
         print(e)
         return None
+
 
 def get_parsed_ret(line):
     properties = '{"annotators":"tokenize,ssplit,pos,depparse","outputFormat":"json","ssplit.newlineIsSentenceBreak":"always"}'
