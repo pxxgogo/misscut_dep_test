@@ -17,7 +17,7 @@ LETTER_TAG_LENGTH = len(LETTER_TAG)
 CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
 SMOOTH_THRESHOLD = 0.4
-SMOOTH_FLAG = False
+SMOOTH_FLAG = True
 
 
 def replace_special_symbols(sentence):
