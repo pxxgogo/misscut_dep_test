@@ -46,6 +46,32 @@ def b_2_i_redis(bytes):
         index -= 1
     return ret
 
+class SmoothCache:
+    def __init__(self):
+        self._table = {}
+        self._size = 0
+        self._key_list = []
+        self._max_size = 100000
+        self._index = 0
+
+    def add(self, key, value):
+        if self._size < self._max_size:
+            self._table[key] = value
+            self._key_list.append(key)
+        else:
+            replaced_key = self._key_list[self._index]
+            self._key_list[self._index] = key
+            self._table.pop(replaced_key)
+            self._table[key] = value
+            self._index += 1
+            if self._index == self._max_size:
+                self._index = 0
+
+    def get(self, key):
+        return self._table.get(key, None)
+
+
+
 
 class ProbModel:
     instance = None
@@ -101,6 +127,9 @@ class ProbModel:
         if SMOOTH_FLAG:
             word_embedding_dir = config["word_embedding_dir"]
             self._word_embedding = Word_vectors(word_embedding_dir)
+            self._smooth_cache = SmoothCache()
+
+
         # self._fast_db_timer = 0
         # self._all_db_timer = 0
         # self._fast_db_times = 0
@@ -161,29 +190,45 @@ class ProbModel:
             main_key = "b-t123"
         if model_type_No == 3:
             key = "%s %s: %s %s .*" % (main_key, dep_key, modified_words[0], modified_words[1])
-            vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[2])
+            main_word = modified_words[2]
         elif model_type_No == 4:
             key = "%s %s: %s .* %s" % (main_key, dep_key, modified_words[0], modified_words[2])
-            vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[1])
+            main_word = modified_words[1]
         elif model_type_No == 5:
             key = "%s %s: .* %s %s" % (main_key, dep_key, modified_words[1], modified_words[2])
-            vector_flag, main_vector = self._word_embedding.get_word_vector(modified_words[0])
+            main_word = modified_words[0]
         else:
             key = ""
             main_vector = -1
-            vector_flag = False
-        if not vector_flag:
             return 0
         rets = []
+        vector_flag, main_vector = self._word_embedding.get_word_vector(main_word)
+        if not vector_flag:
+            return 0
         self._prob_cpp_db.search(key, rets)
         ret_score = 0
         for ret in rets:
             word = ret[0]
-            vector_flag, vector = self._word_embedding.get_word_vector(word)
-            if vector_flag:
-                similar_value = vector.dot(main_vector)
-                if similar_value > SMOOTH_THRESHOLD:
+            smooth_key_1 = "%s %s" % (word, main_word)
+            smooth_key_2 = "%s %s" % (main_word, word)
+            similar_value_1 = self._smooth_cache.get(smooth_key_1)
+            similar_value_2 = self._smooth_cache.get(smooth_key_2)
+            if similar_value_1:
+                if similar_value_1 > SMOOTH_THRESHOLD:
                     ret_score += ret[1]
+                    continue
+            elif similar_value_2:
+                if similar_value_2 > SMOOTH_THRESHOLD:
+                    ret_score += ret[1]
+                    continue
+            else:
+                vector_flag, vector = self._word_embedding.get_word_vector(word)
+                if vector_flag:
+                    similar_value = vector.dot(main_vector)
+                    self._smooth_cache.add(smooth_key_1, similar_value)
+                    if similar_value > SMOOTH_THRESHOLD:
+                        ret_score += ret[1]
+
         return ret_score
 
     def _score(self, db_main_type_No, word_1_info, label_1, word_2_info, label_2, word_3_info):
