@@ -183,6 +183,10 @@ class ProbModel:
             score = b_2_i(value)
         return score
 
+    def _search_smooth_value(self, key, rets):
+        self._prob_cpp_db.search(key, rets)
+
+
     def get_smooth_score(self, db_main_type_No, dep_key, model_type_No, modified_words):
         if db_main_type_No == 0:
             main_key = "d-t123"
@@ -202,10 +206,11 @@ class ProbModel:
             main_vector = -1
             return 0
         rets = []
+        self._search_smooth_value(key, rets)
+        # self._prob_cpp_db.search(key, rets)
         vector_flag, main_vector = self._word_embedding.get_word_vector(main_word)
         if not vector_flag:
             return 0
-        self._prob_cpp_db.search(key, rets)
         ret_score = 0
         for ret in rets:
             word = ret[0]
@@ -224,6 +229,7 @@ class ProbModel:
                         ret_score += ret[1]
 
         return ret_score
+
 
     def _score(self, db_main_type_No, word_1_info, label_1, word_2_info, label_2, word_3_info):
         dep_key = "%s %s" % (label_1, label_2)
