@@ -209,23 +209,17 @@ class ProbModel:
         ret_score = 0
         for ret in rets:
             word = ret[0]
-            smooth_key_1 = "%s %s" % (word, main_word)
-            smooth_key_2 = "%s %s" % (main_word, word)
-            similar_value_1 = self._smooth_cache.get(smooth_key_1)
-            similar_value_2 = self._smooth_cache.get(smooth_key_2)
-            if similar_value_1:
-                if similar_value_1 > SMOOTH_THRESHOLD:
-                    ret_score += ret[1]
-                    continue
-            elif similar_value_2:
-                if similar_value_2 > SMOOTH_THRESHOLD:
+            smooth_key = "%s %s" % (word, main_word)
+            similar_value = self._smooth_cache.get(smooth_key)
+            if similar_value:
+                if similar_value > SMOOTH_THRESHOLD:
                     ret_score += ret[1]
                     continue
             else:
                 vector_flag, vector = self._word_embedding.get_word_vector(word)
                 if vector_flag:
                     similar_value = vector.dot(main_vector)
-                    self._smooth_cache.add(smooth_key_1, similar_value)
+                    self._smooth_cache.add(smooth_key, similar_value)
                     if similar_value > SMOOTH_THRESHOLD:
                         ret_score += ret[1]
 
