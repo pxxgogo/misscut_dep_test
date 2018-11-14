@@ -1,6 +1,5 @@
 import io
 import numpy as np
-from scipy.spatial import cKDTree
 
 SCORE_THRESHOLD = 0.5
 CACHE_SIZE = 1000

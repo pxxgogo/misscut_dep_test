@@ -5,7 +5,7 @@ import struct
 import json
 import redis
 import sys
-from kernel.model.prob_model.word_embedding import Word_vectors
+from kernel.model.prob_model.word_embedding_mag import Word_vectors
 import numpy as np
 
 NUMBER_RE_COMPILOR = re.compile(r"[\.-]?\d[0-9\.%-]*")
@@ -207,11 +207,10 @@ class ProbModel:
             return 0
         rets = []
         self._search_smooth_value(key, rets)
-        # self._prob_cpp_db.search(key, rets)
-        vector_flag, main_vector = self._word_embedding.get_word_vector(main_word)
-        if not vector_flag:
-            return 0
         ret_score = 0
+        words = []
+        values = []
+        smooth_keys = []
         for ret in rets:
             word = ret[0]
             smooth_key = "%s %s" % (word, main_word)
@@ -221,13 +220,16 @@ class ProbModel:
                     ret_score += ret[1]
                     continue
             else:
-                vector_flag, vector = self._word_embedding.get_word_vector(word)
-                if vector_flag:
-                    similar_value = vector.dot(main_vector)
-                    self._smooth_cache.add(smooth_key, similar_value)
-                    if similar_value > SMOOTH_THRESHOLD:
-                        ret_score += ret[1]
-
+                words.append(word)
+                values.append(values)
+                smooth_keys.append(smooth_key)
+        if len(words) == 0:
+            return ret_score
+        similarities = self._word_embedding.get_similarities(main_word, words)
+        for value, similarity, smooth_key in zip(values, similarities, smooth_keys):
+            self._smooth_cache.add(smooth_key, similarity)
+            if similarity > SMOOTH_THRESHOLD:
+                ret_score += value
         return ret_score
 
 
