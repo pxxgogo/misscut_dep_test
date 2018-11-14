@@ -6,7 +6,6 @@ import json
 import redis
 import sys
 from kernel.model.prob_model.word_embedding_mag import Word_vectors
-import numpy as np
 
 NUMBER_RE_COMPILOR = re.compile(r"[\.-]?\d[0-9\.%-]*")
 NUMBER_TAG = "{{#}}"
@@ -221,7 +220,7 @@ class ProbModel:
                     continue
             else:
                 words.append(word)
-                values.append(values)
+                values.append(ret[1])
                 smooth_keys.append(smooth_key)
         if len(words) == 0:
             return ret_score
