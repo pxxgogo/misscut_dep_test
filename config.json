@@ -13,5 +13,5 @@
     "root_dir": "/home/misscut/app/model/candidata_word_data/",
     "pinyin_to_words_dir": "pinyin_to_words.dict"
   },
-  "word_embedding_dir": "/home/misscut/wordvectors_pretrained/cc.zh.300.vec"
+  "word_embedding_dir": "/home/misscut/wordvectors_pretrained/tencent/tencent.magnitude"
 }
