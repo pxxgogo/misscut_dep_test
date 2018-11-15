@@ -7,3 +7,6 @@ class Word_vectors:
 
     def get_similarities(self, key_word, word_list):
         return 1 - self._vectors.distances(key_word, word_list)
+
+    def is_in_vocab(self, word):
+        return word in self._vectors

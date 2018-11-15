@@ -204,6 +204,8 @@ class ProbModel:
             key = ""
             main_vector = -1
             return 0
+        if not self._word_embedding.is_in_vocab(main_word):
+            return 0
         rets = []
         self._search_smooth_value(key, rets)
         ret_score = 0
@@ -219,6 +221,8 @@ class ProbModel:
                     ret_score += ret[1]
                     continue
             else:
+                if not self._word_embedding.is_in_vocab(word):
+                    continue
                 words.append(word)
                 values.append(ret[1])
                 smooth_keys.append(smooth_key)
