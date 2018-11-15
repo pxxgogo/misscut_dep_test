@@ -5,7 +5,7 @@ import struct
 import json
 import redis
 import sys
-from kernel.model.prob_model.word_embedding_mag import Word_vectors
+from kernel.model.prob_model.word_embedding_gensim import Word_vectors
 
 NUMBER_RE_COMPILOR = re.compile(r"[\.-]?\d[0-9\.%-]*")
 NUMBER_TAG = "{{#}}"
