@@ -233,6 +233,11 @@ class ProbModel:
             self._smooth_cache.add(smooth_key, similarity)
             if similarity > SMOOTH_THRESHOLD:
                 ret_score += value
+        del words
+        del values
+        del rets
+        del smooth_keys
+        del similarities
         return ret_score
 
 
