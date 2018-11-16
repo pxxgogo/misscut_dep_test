@@ -115,7 +115,7 @@ if __name__ == "__main__":
     data_buffer = []
     pre_data_No = -1
 
-    test_No = 0
+    # test_No = 0
     # pr = cProfile.Profile()
     # pr.enable()
 
@@ -135,12 +135,12 @@ if __name__ == "__main__":
             buffer_index += 1
 
         data_No += 1
-        test_No += 1
-        if test_No in [100, 200, 300]:
-            gc.collect()
-            show_most_common_types(limit=50)
-            if test_No == 300:
-                exit()
+        # test_No += 1
+        # if test_No in [100, 200, 300]:
+        #     gc.collect()
+        #     show_most_common_types(limit=50)
+        #     if test_No == 300:
+        #         exit()
             # pr.disable()
             # pr.print_stats()
             # pr.dump_stats("profile.dp")
