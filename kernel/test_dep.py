@@ -2,11 +2,13 @@ import argparse
 import json
 import os
 import re
+import gc
 
 from . import kernel
 from .reader import Reader
 from .data_container import Data_container
 import cProfile
+from .memory_check import show_most_common_types
 
 PARSING_BUFFER_SIZE = 100
 CUT_FLAG_REG = re.compile('[，,。！!？\?……：:；;\n\r —\.]+')
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     data_buffer = []
     pre_data_No = -1
 
-    # test_No = 0
+    test_No = 0
     # pr = cProfile.Profile()
     # pr.enable()
 
@@ -133,12 +135,16 @@ if __name__ == "__main__":
             buffer_index += 1
 
         data_No += 1
-        # test_No += 1
-        # if test_No == 100:
-        #     pr.disable()
-        #     pr.print_stats()
-        #     pr.dump_stats("profile.dp")
-        #     exit()
+        test_No += 1
+        if test_No in [100, 200, 300]:
+            gc.collect()
+            show_most_common_types(limit=50)
+            if test_No == 300:
+                exit()
+            # pr.disable()
+            # pr.print_stats()
+            # pr.dump_stats("profile.dp")
+            # exit()
         if buffer_index >= PARSING_BUFFER_SIZE:
             para = "\n".join(sentence_buffer)
             rets = kernel.get_parsed_rets(para)
