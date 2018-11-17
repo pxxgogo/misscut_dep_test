@@ -54,6 +54,8 @@ class SmoothCache:
         self._index = 0
 
     def add(self, key, value):
+        if key in self._table:
+            return
         if self._size < self._max_size:
             self._table[key] = value
             self._key_list.append(key)
