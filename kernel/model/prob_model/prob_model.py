@@ -16,7 +16,7 @@ LETTER_TAG_LENGTH = len(LETTER_TAG)
 CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
 SMOOTH_THRESHOLD = 0.6
-SMOOTH_FLAG = False
+SMOOTH_FLAG = True
 
 
 def replace_special_symbols(sentence):
@@ -57,6 +57,7 @@ class SmoothCache:
         if self._size < self._max_size:
             self._table[key] = value
             self._key_list.append(key)
+            self._size += 1
         else:
             replaced_key = self._key_list[self._index]
             self._key_list[self._index] = key

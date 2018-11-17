@@ -6,10 +6,11 @@ CACHE_SIZE = 1000
 
 class Word_vectors:
     def __init__(self, fname, words_num=-1):
-        self.word2vector = {}
-        self.words = []
-        self.vectors = []
-        self.kdtree = None
+        self._word2index = {}
+        self._words = []
+        self._vectors = None
+        # self.kdtree = None
+        self._dimension = 0
         self._load_vectors(fname, words_num)
         # self._build_kdtree()
         # self.cache_similar_words_info = {}
@@ -19,7 +20,9 @@ class Word_vectors:
     def _load_vectors(self, fname, words_num):
         fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
         n, d = map(int, fin.readline().split())
+        self._dimension = d
         word_No = 0
+        vectors = []
         for line in fin:
             if words_num != -1 and word_No > words_num:
                 break
@@ -27,20 +30,25 @@ class Word_vectors:
             raw_vector = list(map(float, tokens[1:]))
             vector = np.array(raw_vector, np.float16)
             vector /= np.sqrt(vector.dot(vector))
-            self.word2vector[tokens[0]] = vector
-            self.vectors.append(vector)
-            self.words.append(tokens[0])
+            self._word2index[tokens[0]] = word_No
+            vectors.append(vector)
+            self._words.append(tokens[0])
             word_No += 1
-        self.vectors = np.array(self.vectors, np.float16)
+        self._vectors = np.array(vectors, np.float16)
+        del vectors
 
     # def _build_kdtree(self):
     #     self.kdtree = cKDTree(self.vectors)
 
-    def get_word_vector(self, word):
-        if not word in self.word2vector:
-            return False, np.zeros(300)
-        vector = self.word2vector[word]
-        return True, vector
+    def is_in_vocab(self, word):
+        return word in self._word2index
+
+
+    def get_similarities(self, key_word, word_list):
+        key_vector = self._vectors[self._word2index[key_word]]
+        other_indices = [self._word2index[word] for word in word_list]
+        other_vectors = self._vectors[other_indices]
+        return np.dot(other_vectors, key_vector)
 
     # def get_closed_words(self, word_name, k=30):
     #     if word_name in self.cache_similar_words_info:
@@ -50,7 +58,7 @@ class Word_vectors:
     #     indexes = query[1]
     #     rets = []
     #     for index in indexes:
-    #         word = self.words[index]
+    #         word = self._words[index]
     #         if word == word_name:
     #             continue
     #         vector = self.get_word_vector(word)
