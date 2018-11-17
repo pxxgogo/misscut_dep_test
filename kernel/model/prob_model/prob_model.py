@@ -64,7 +64,7 @@ class SmoothCache:
             self._table.pop(replaced_key)
             self._table[key] = value
             self._index += 1
-            if self._index == self._max_size:
+            if self._index == self._size:
                 self._index = 0
 
     def get(self, key):
