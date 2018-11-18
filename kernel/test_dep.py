@@ -33,6 +33,7 @@ def operate_data(data, data_No):
     analyze_sentence((data_No, 0), correct_ret)
     return True
 
+
 def check_data(data):
     sentence = data["wrong_sentence"]
     items = CUT_FLAG_REG.split(sentence)
@@ -53,8 +54,6 @@ def check_data(data):
     return True
 
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('input_path', type=str)
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument('--precision_log_name', type=str, default="precisions.csv")
     parser.add_argument('--data_type', type=int, default=0)
     parser.add_argument('--c_w_data_chosen_flag', type=int, default=0)
-
+    parser.add_argument('--max_data_num', type=int, default=-1)
 
     args = parser.parse_args()
     log_name = args.log_name
@@ -76,6 +75,7 @@ if __name__ == "__main__":
     statistics_name = args.statistics_name
     precision_log_name = args.precision_log_name
     c_w_data_chosen_flag = args.c_w_data_chosen_flag
+    max_data_num = args.max_data_num
     file_num = 0
     if not input_path.endswith('.out') and not input_path.endswith('.txt'):
         exit()
@@ -141,10 +141,10 @@ if __name__ == "__main__":
         #     show_most_common_types(limit=50)
         #     if test_No == 300:
         #         exit()
-            # pr.disable()
-            # pr.print_stats()
-            # pr.dump_stats("profile.dp")
-            # exit()
+        # pr.disable()
+        # pr.print_stats()
+        # pr.dump_stats("profile.dp")
+        # exit()
         if buffer_index >= PARSING_BUFFER_SIZE:
             para = "\n".join(sentence_buffer)
             rets = kernel.get_parsed_rets(para)
@@ -172,6 +172,9 @@ if __name__ == "__main__":
             data_buffer = []
             buffer_index = 0
             print("Having Finished: %d" % data_No, end='\r')
+            if 0 <= max_data_num < data_No:
+                break
+
     data_container.feed_data_forced()
     # data_container.dump_csv_statistics()
     # data_container.dump_csv_precision()
