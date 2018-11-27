@@ -17,7 +17,7 @@ CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
 SMOOTH_VECTOR_SCORE_THRESHOLD = 0.6
 SMOOTH_FLAG = True
-SMOOTH_VALUE_THRESHOLD = 100
+SMOOTH_VALUE_THRESHOLD = 80000
 
 
 def replace_special_symbols(sentence):
@@ -195,13 +195,13 @@ class ProbModel:
             main_key = "d-t123"
         else:
             main_key = "b-t123"
-        if model_type_No == 3:
+        if model_type_No == 2:
             key = "%s %s: %s %s .*" % (main_key, dep_key, modified_words[0], modified_words[1])
             main_word = modified_words[2]
-        elif model_type_No == 4:
+        elif model_type_No == 1:
             key = "%s %s: %s .* %s" % (main_key, dep_key, modified_words[0], modified_words[2])
             main_word = modified_words[1]
-        elif model_type_No == 5:
+        elif model_type_No == 0:
             key = "%s %s: .* %s %s" % (main_key, dep_key, modified_words[1], modified_words[2])
             main_word = modified_words[0]
         else:
@@ -257,15 +257,31 @@ class ProbModel:
         modified_word_2 = replace_special_symbols(word_2)
         modified_word_3 = replace_special_symbols(word_3)
 
+        smooth_model_type_flags = []
+
         scores = []
         score = self._get_value(modified_word_1, "fre")
+        if score < SMOOTH_VALUE_THRESHOLD:
+            smooth_model_type_flags.append((0, True))
+        else:
+            smooth_model_type_flags.append((0, False))
         scores.append(score)
 
         score = self._get_value(modified_word_2, "fre")
+        if score < SMOOTH_VALUE_THRESHOLD:
+            smooth_model_type_flags.append((1, True))
+        else:
+            smooth_model_type_flags.append((1, False))
         scores.append(score)
 
         score = self._get_value(modified_word_3, "fre")
+        if score < SMOOTH_VALUE_THRESHOLD:
+            smooth_model_type_flags.append((2, True))
+        else:
+            smooth_model_type_flags.append((2, False))
         scores.append(score)
+
+
 
         if db_main_type_No == 0:
             for model_type_No in range(6):
@@ -306,7 +322,6 @@ class ProbModel:
                 score = self._get_value(key, db_type)
                 scores.append(score)
 
-        smooth_model_type_flags = []
         for model_type_No in range(7):
             if model_type_No == 0:
                 key = "%s: %s" % (dep_key, modified_word_1)
@@ -331,12 +346,7 @@ class ProbModel:
                 db_type = "b-" + db_sub_type
             score = self._get_value(key, db_type)
             scores.append(score)
-            # about smooth
-            if model_type_No in [3, 4, 5]:
-                if score < SMOOTH_VALUE_THRESHOLD:
-                    smooth_model_type_flags.append((model_type_No, True))
-                else:
-                    smooth_model_type_flags.append((model_type_No, False))
+
         for i, smooth_feature_flag in smooth_model_type_flags:
             if smooth_feature_flag and SMOOTH_FLAG:
                 score = self.get_smooth_score(db_main_type_No, dep_key, i,

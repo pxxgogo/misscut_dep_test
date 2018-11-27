@@ -30,8 +30,8 @@ class Word_vectors:
                 break
             tokens = line.rstrip().split(' ')
             raw_vector = list(map(float, tokens[1:]))
-            vector = self._op.array(raw_vector, np.float16)
-            vector /= self._op.sqrt(vector.dot(vector))
+            vector = np.array(raw_vector, np.float16)
+            vector /= np.sqrt(vector.dot(vector))
             self._word2index[tokens[0]] = word_No
             vectors.append(vector)
             self._words.append(tokens[0])
