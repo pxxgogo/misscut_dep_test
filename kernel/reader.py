@@ -2,7 +2,15 @@ import re
 
 POSITION_COMPILER = re.compile("\[(\d+),(\d+)\]")
 
+IGNORING_ITEMS = ["punct"]
+# IGNORING_CHARACTERS = "[0-9\.a-zA-Z]"
+IGNORING_CHARACTERS = "[\.0-9a-zA-Z\[\]【】「」\"“”《》￥${}\(\)]"
+
+IGNORING_COMPILER = re.compile(IGNORING_CHARACTERS)
+
 IGNORE_TYPES = []
+
+
 # IGNORE_TYPES = ["3-1", "3-2"]
 
 class Reader:
@@ -11,6 +19,12 @@ class Reader:
         with open(file_path) as file_handle:
             raw_datas = file_handle.readlines()
             self.parse_data(raw_datas)
+
+    def _is_sentence_ignored(self, sentence):
+        if len(IGNORING_COMPILER.findall(sentence)) > 0:
+            return True
+        else:
+            return False
 
     def parse_data(self, raw_datas):
         self.__datas = []
@@ -32,6 +46,8 @@ class Reader:
                 if mistake_flag == 'False':
                     continue
                 correct_sentence = wrong_sentence[:word_position[0]] + correct_word + wrong_sentence[word_position[1]:]
+                if self._is_sentence_ignored(correct_sentence) or self._is_sentence_ignored(wrong_sentence):
+                    continue
                 data = {'correct_sentence': correct_sentence,
                         'wrong_sentence': wrong_sentence,
                         'mistake_type': mistake_type,
@@ -86,15 +102,3 @@ if __name__ == "__main__":
     for data in reader():
         print(data)
         input()
-
-
-
-
-
-
-
-
-
-
-
-            
