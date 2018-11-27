@@ -15,8 +15,9 @@ LETTER_TAG = "{{E}}"
 LETTER_TAG_LENGTH = len(LETTER_TAG)
 CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
-SMOOTH_THRESHOLD = 0.6
+SMOOTH_VECTOR_SCORE_THRESHOLD = 0.6
 SMOOTH_FLAG = True
+SMOOTH_VALUE_THRESHOLD = 100
 
 
 def replace_special_symbols(sentence):
@@ -86,7 +87,7 @@ class ProbModel:
             cls.instance = cls()
             return cls.instance
 
-    def __init__(self):
+    def __init__(self, gpu_flag=0):
         config_dir = CONFIG_DIR
         with open(config_dir) as handle:
             config = json.load(handle)
@@ -128,7 +129,7 @@ class ProbModel:
 
         if SMOOTH_FLAG:
             word_embedding_dir = config["word_embedding_dir"]
-            self._word_embedding = Word_vectors(word_embedding_dir)
+            self._word_embedding = Word_vectors(word_embedding_dir, gpu_flag=gpu_flag)
             self._smooth_cache = SmoothCache()
 
 
@@ -220,7 +221,7 @@ class ProbModel:
             smooth_key = "%s %s" % (word, main_word)
             similar_value = self._smooth_cache.get(smooth_key)
             if similar_value:
-                if similar_value > SMOOTH_THRESHOLD:
+                if similar_value > SMOOTH_VECTOR_SCORE_THRESHOLD:
                     ret_score += ret[1]
                     continue
             else:
@@ -234,7 +235,7 @@ class ProbModel:
         similarities = self._word_embedding.get_similarities(main_word, words)
         for value, similarity, smooth_key in zip(values, similarities, smooth_keys):
             self._smooth_cache.add(smooth_key, similarity)
-            if similarity > SMOOTH_THRESHOLD:
+            if similarity > SMOOTH_VECTOR_SCORE_THRESHOLD:
                 ret_score += value
         del words
         del values
@@ -305,8 +306,7 @@ class ProbModel:
                 score = self._get_value(key, db_type)
                 scores.append(score)
 
-        smooth_compare_score = -1
-        smooth_model_type_No = 0
+        smooth_model_type_flags = []
         for model_type_No in range(7):
             if model_type_No == 0:
                 key = "%s: %s" % (dep_key, modified_word_1)
@@ -332,14 +332,18 @@ class ProbModel:
             score = self._get_value(key, db_type)
             scores.append(score)
             # about smooth
-            if model_type_No in [3, 4, 5] and score > smooth_compare_score:
-                smooth_compare_score = score
-                smooth_model_type_No = model_type_No
-        if smooth_compare_score == 0 or not SMOOTH_FLAG:
-            scores.append(0)
-            return scores
-        score = self.get_smooth_score(db_main_type_No, dep_key, smooth_model_type_No, (modified_word_1, modified_word_2, modified_word_3))
-        scores.append(score)
+            if model_type_No in [3, 4, 5]:
+                if score < SMOOTH_VALUE_THRESHOLD:
+                    smooth_model_type_flags.append((model_type_No, True))
+                else:
+                    smooth_model_type_flags.append((model_type_No, False))
+        for i, smooth_feature_flag in smooth_model_type_flags:
+            if smooth_feature_flag and SMOOTH_FLAG:
+                score = self.get_smooth_score(db_main_type_No, dep_key, i,
+                                              (modified_word_1, modified_word_2, modified_word_3))
+            else:
+                score = 0
+            scores.append(score)
         return scores
 
     # def init_timer(self):

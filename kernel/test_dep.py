@@ -1,14 +1,10 @@
 import argparse
-import json
 import os
 import re
-import gc
 
 from . import kernel
 from .reader import Reader
 from .data_container import Data_container
-import cProfile
-from .memory_check import show_most_common_types
 
 PARSING_BUFFER_SIZE = 100
 CUT_FLAG_REG = re.compile('[，,。！!？\?……：:；;\n\r —\.]+')
@@ -60,11 +56,10 @@ if __name__ == "__main__":
     parser.add_argument('--output_dir', type=str, default="./ret")
     parser.add_argument('--log_name', type=str, default='log.txt')
     parser.add_argument('--model_flag', type=int, default=0)
-    parser.add_argument('--statistics_name', type=str, default="statistics.csv")
-    parser.add_argument('--precision_log_name', type=str, default="precisions.csv")
     parser.add_argument('--data_type', type=int, default=0)
     parser.add_argument('--c_w_data_chosen_flag', type=int, default=0)
     parser.add_argument('--max_data_num', type=int, default=-1)
+    parser.add_argument('--gpu_flag', type=int, default=0)
 
     args = parser.parse_args()
     log_name = args.log_name
@@ -72,10 +67,9 @@ if __name__ == "__main__":
     input_path = args.input_path
     model_flag = args.model_flag
     data_type = args.data_type
-    statistics_name = args.statistics_name
-    precision_log_name = args.precision_log_name
     c_w_data_chosen_flag = args.c_w_data_chosen_flag
     max_data_num = args.max_data_num
+    gpu_flag = args.gpu_flag
     file_num = 0
     if not input_path.endswith('.out') and not input_path.endswith('.txt'):
         exit()
@@ -88,25 +82,18 @@ if __name__ == "__main__":
             exit()
 
     log_path = os.path.join(output_dir, log_name)
-    precision_log_path = os.path.join(output_dir, precision_log_name)
-    statistics_path = os.path.join(output_dir, statistics_name)
 
     global data_container
     if model_flag == 0:
-        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                        statistics_path=statistics_path, model_type='ngram')
+        data_container = Data_container(log_path=log_path, model_type='ngram', gpu_flag=gpu_flag)
     elif model_flag == 1:
-        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                        statistics_path=statistics_path, model_type='rnn', buffer_size=200)
+        data_container = Data_container(log_path=log_path, model_type='rnn', buffer_size=200, gpu_flag=gpu_flag)
     elif model_flag == 2:
-        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                        statistics_path=statistics_path, model_type='prob_model', buffer_size=1)
+        data_container = Data_container(log_path=log_path, model_type='prob_model', buffer_size=1, gpu_flag=gpu_flag)
     elif model_flag == 3:
-        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                        statistics_path=statistics_path, model_type='prob_model_ngram', buffer_size=1)
+        data_container = Data_container(log_path=log_path, model_type='prob_model_ngram', buffer_size=1, gpu_flag=gpu_flag)
     else:
-        data_container = Data_container(log_path=log_path, precisions_path=precision_log_path,
-                                        statistics_path=statistics_path, model_type='classification', buffer_size=256)
+        data_container = Data_container(log_path=log_path, model_type='classification', buffer_size=256, gpu_flag=gpu_flag)
     reader = Reader(input_path, data_type)
     data_No = 0
     buffer_index = 0
@@ -114,10 +101,6 @@ if __name__ == "__main__":
     sentence_buffer = []
     data_buffer = []
     pre_data_No = -1
-
-    # test_No = 0
-    # pr = cProfile.Profile()
-    # pr.enable()
 
     for data in reader():
         if not check_data(data):
@@ -135,16 +118,6 @@ if __name__ == "__main__":
             buffer_index += 1
 
         data_No += 1
-        # test_No += 1
-        # if test_No in [100, 200, 300]:
-        #     gc.collect()
-        #     show_most_common_types(limit=50)
-        #     if test_No == 300:
-        #         exit()
-        # pr.disable()
-        # pr.print_stats()
-        # pr.dump_stats("profile.dp")
-        # exit()
         if buffer_index >= PARSING_BUFFER_SIZE:
             para = "\n".join(sentence_buffer)
             rets = kernel.get_parsed_rets(para)
@@ -176,6 +149,4 @@ if __name__ == "__main__":
                 break
 
     data_container.feed_data_forced()
-    # data_container.dump_csv_statistics()
-    # data_container.dump_csv_precision()
     data_container.close_all_handles()

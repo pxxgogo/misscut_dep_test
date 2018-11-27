@@ -33,13 +33,10 @@ def generate_log_sentence(data, data_type):
 
 
 class Data_container:
-    def __init__(self, buffer_size=1, model_type=NGRAM_TYPE, log_path="./log.txt", statistics_path="./statistics.csv",
-                 precisions_path="precisions.csv", test_mode=0):
+    def __init__(self, buffer_size=1, model_type=NGRAM_TYPE, log_path="./log.txt", test_mode=0, gpu_flag=0):
         self._data_buffer = {'data_ID_tuple': [], 'data': []}
         self._buffer_length = 0
         self._log_handle = open(log_path, 'w')
-        self._statistics_handle = open(statistics_path, 'w')
-        self._precisions_handle = open(precisions_path, 'w')
         self._buffer_size = buffer_size
         self._model_type = model_type
         self._main_data_dict = {}
@@ -54,7 +51,7 @@ class Data_container:
         elif model_type == RNN_TYPE:
             self.model = RNN_wrapper()
         elif model_type == PROB_MODEL_TYPE:
-            self.model = prob_model.ProbModel()
+            self.model = prob_model.ProbModel(gpu_flag=gpu_flag)
         elif model_type == PROB_MODEL_NGRAM_TYPE:
             self.model = prob_model.ProbModel()
             self.model_2 = prob_ngram.ProbNgramModel()
@@ -68,8 +65,6 @@ class Data_container:
 
     def close_all_handles(self):
         self._log_handle.close()
-        self._statistics_handle.close()
-        self._precisions_handle.close()
 
     def feed_data(self, data, data_ID_tuple, end_flag=False):
         self._data_buffer['data_ID_tuple'].append(data_ID_tuple)
