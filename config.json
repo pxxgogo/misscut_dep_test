@@ -1,16 +1,10 @@
 {
-  "stat_models_dir": {
-    "root_dir": "/home/misscut/app/model/stat_model/leveldb",
-    "triples_deep_dir": "deep",
-    "triples_broad_dir": "broad",
-    "bigrams_dir": "single_dep",
-    "unigrams_dir": "word_frequency/word_frequency.db"
-  },
-  "cpp_stat_model_dir": "/home/misscut/app/model/stat_model",
-  "cpp_stat_model_name": "cpp.model",
-  "classifier_model_path": "/home/misscut/app/model/lgbm/model.lgbm",
+  "stat_models_dir": "/home/pxxgogo/misscut/app/model/stat_model/leveldb_2_13",
+  "cpp_stat_model_dir": "/home/pxxgogo/misscut/app/model/stat_model/",
+  "cpp_stat_model_name": "cpp_2_13.model",
+  "classifier_model_path": "/home/pxxgogo/misscut/app/model/lgbm/model.lgbm",
   "candidates_data_dirs": {
-    "root_dir": "/home/misscut/app/model/candidata_word_data/",
+    "root_dir": "/home/pxxgogo/misscut/app/model/candidata_word_data/",
     "pinyin_to_words_dir": "pinyin_to_words.dict"
   },
   "word_embedding_dir": "/home/misscut/wordvectors_pretrained/tencent/Tencent_AILab_ChineseEmbedding.txt"
