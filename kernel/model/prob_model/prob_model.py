@@ -16,7 +16,7 @@ LETTER_TAG_LENGTH = len(LETTER_TAG)
 CONFIG_DIR = "config.json"
 FAST_STAT_DB_FLAG = 2
 SMOOTH_VECTOR_SCORE_THRESHOLD = 0.6
-SMOOTH_FLAG = True
+SMOOTH_FLAG = False
 SMOOTH_VALUE_THRESHOLD = 80000
 
 
@@ -46,6 +46,7 @@ def b_2_i_redis(bytes):
         index -= 1
     return ret
 
+
 class SmoothCache:
     def __init__(self):
         self._table = {}
@@ -74,8 +75,6 @@ class SmoothCache:
         return self._table.get(key, None)
 
 
-
-
 class ProbModel:
     instance = None
 
@@ -91,31 +90,31 @@ class ProbModel:
         config_dir = CONFIG_DIR
         with open(config_dir) as handle:
             config = json.load(handle)
-        model_dirs = config["stat_models_dir"]
-        deep_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["triples_deep_dir"])
-        broad_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["triples_broad_dir"])
-        single_dep_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["bigrams_dir"])
-        fre_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["unigrams_dir"])
+        model_dir = config["stat_models_dir"]
+        # deep_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["triples_deep_dir"])
+        # broad_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["triples_broad_dir"])
+        # single_dep_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["bigrams_dir"])
+        # fre_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["unigrams_dir"])
 
-        self._deep_dbs = {'s1': plyvel.DB(os.path.join(deep_model_dir, 's1.db')),
-                          's2': plyvel.DB(os.path.join(deep_model_dir, 's2.db')),
-                          's3': plyvel.DB(os.path.join(deep_model_dir, 's3.db')),
-                          'b12': plyvel.DB(os.path.join(deep_model_dir, 'b12.db')),
-                          'b13': plyvel.DB(os.path.join(deep_model_dir, 'b13.db')),
-                          'b23': plyvel.DB(os.path.join(deep_model_dir, 'b23.db')),
-                          't123': plyvel.DB(os.path.join(deep_model_dir, 't123.db'))}
+        self._deep_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'td-s1.db')),
+                          's2': plyvel.DB(os.path.join(model_dir, 'td-s2.db')),
+                          's3': plyvel.DB(os.path.join(model_dir, 'td-s3.db')),
+                          'b12': plyvel.DB(os.path.join(model_dir, 'td-b12.db')),
+                          'b13': plyvel.DB(os.path.join(model_dir, 'td-b13.db')),
+                          'b23': plyvel.DB(os.path.join(model_dir, 'td-b23.db')),
+                          't123': plyvel.DB(os.path.join(model_dir, 'td-t123.db'))}
 
-        self._broad_dbs = {'s1': plyvel.DB(os.path.join(broad_model_dir, 's1.db')),
-                           's2': plyvel.DB(os.path.join(broad_model_dir, 's2.db')),
-                           's3': plyvel.DB(os.path.join(broad_model_dir, 's3.db')),
-                           'b12': plyvel.DB(os.path.join(broad_model_dir, 'b12.db')),
-                           'b13': plyvel.DB(os.path.join(broad_model_dir, 'b13.db')),
-                           'b23': plyvel.DB(os.path.join(broad_model_dir, 'b23.db')),
-                           't123': plyvel.DB(os.path.join(broad_model_dir, 't123.db'))}
-        self._single_dbs = {'s1': plyvel.DB(os.path.join(single_dep_model_dir, 's1.db')),
-                            's2': plyvel.DB(os.path.join(single_dep_model_dir, 's2.db')),
-                            'b12': plyvel.DB(os.path.join(single_dep_model_dir, 'b12.db'))}
-        self._fre_db = plyvel.DB(fre_model_dir)
+        self._broad_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'tb-s1.db')),
+                           's2': plyvel.DB(os.path.join(model_dir, 'tb-s2.db')),
+                           's3': plyvel.DB(os.path.join(model_dir, 'tb-s3.db')),
+                           'b12': plyvel.DB(os.path.join(model_dir, 'tb-b12.db')),
+                           'b13': plyvel.DB(os.path.join(model_dir, 'tb-b13.db')),
+                           'b23': plyvel.DB(os.path.join(model_dir, 'tb-b23.db')),
+                           't123': plyvel.DB(os.path.join(model_dir, 'tb-t123.db'))}
+        self._single_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'b-s1.db')),
+                            's2': plyvel.DB(os.path.join(model_dir, 'b-s2.db')),
+                            'b12': plyvel.DB(os.path.join(model_dir, 'b-b12.db'))}
+        self._fre_db = plyvel.DB(plyvel.DB(os.path.join(model_dir, 'fre.db')))
 
         if FAST_STAT_DB_FLAG == 1:
             self._redis_db = redis.StrictRedis(host='localhost', port=6379, db=0)
@@ -131,7 +130,6 @@ class ProbModel:
             word_embedding_dir = config["word_embedding_dir"]
             self._word_embedding = Word_vectors(word_embedding_dir, gpu_flag=gpu_flag)
             self._smooth_cache = SmoothCache()
-
 
         # self._fast_db_timer = 0
         # self._all_db_timer = 0
@@ -189,7 +187,6 @@ class ProbModel:
     def _search_smooth_value(self, key, rets):
         self._prob_cpp_db.search(key, rets)
 
-
     def get_smooth_score(self, db_main_type_No, dep_key, model_type_No, modified_words):
         if db_main_type_No == 0:
             main_key = "d-t123"
@@ -244,7 +241,6 @@ class ProbModel:
         del similarities
         return ret_score
 
-
     def _score(self, db_main_type_No, word_1_info, label_1, word_2_info, label_2, word_3_info):
         dep_key = "%s %s" % (label_1, label_2)
         word_1 = word_1_info["text"]
@@ -280,8 +276,6 @@ class ProbModel:
         else:
             smooth_model_type_flags.append((2, False))
         scores.append(score)
-
-
 
         if db_main_type_No == 0:
             for model_type_No in range(6):
@@ -346,6 +340,9 @@ class ProbModel:
                 db_type = "b-" + db_sub_type
             score = self._get_value(key, db_type)
             scores.append(score)
+
+        if not SMOOTH_FLAG:
+            return scores
 
         for i, smooth_feature_flag in smooth_model_type_flags:
             if smooth_feature_flag and SMOOTH_FLAG:

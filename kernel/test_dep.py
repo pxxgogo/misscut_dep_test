@@ -50,6 +50,7 @@ def check_data(data):
     return True
 
 
+# gpu_flag is for smooth algorithm
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('input_path', type=str)
