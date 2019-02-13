@@ -114,7 +114,7 @@ class ProbModel:
         self._single_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'b-s1.db')),
                             's2': plyvel.DB(os.path.join(model_dir, 'b-s2.db')),
                             'b12': plyvel.DB(os.path.join(model_dir, 'b-b12.db'))}
-        self._fre_db = plyvel.DB(plyvel.DB(os.path.join(model_dir, 'fre.db')))
+        self._fre_db = plyvel.DB(os.path.join(model_dir, 'fre.db'))
 
         if FAST_STAT_DB_FLAG == 1:
             self._redis_db = redis.StrictRedis(host='localhost', port=6379, db=0)
