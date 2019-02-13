@@ -5,7 +5,7 @@ import requests
 
 from .data_container import Data_container
 
-CORENLP_SERVER_URL = 'http://166.111.139.15:9000'
+CORENLP_SERVER_URL = 'http://localhost:9000'
 
 HEADER_PATTERN = r'Sentence #(\d+) \((\d+) tokens\):'
 HEADER_COMPILER = re.compile(HEADER_PATTERN)
