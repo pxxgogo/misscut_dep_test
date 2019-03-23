@@ -158,8 +158,7 @@ class ProbModel:
             elif FAST_STAT_DB_FLAG == 2:
                 if value_fast_db != 0:
                     return value_fast_db
-        else:
-            return 0
+        return 0
         # key = key.encode("utf-8")
         # # start_time = time.time()
         # if db_type == "fre":
