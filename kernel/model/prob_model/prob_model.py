@@ -96,25 +96,25 @@ class ProbModel:
         # single_dep_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["bigrams_dir"])
         # fre_model_dir = os.path.join(model_dirs["root_dir"], model_dirs["unigrams_dir"])
 
-        self._deep_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'td-s1.db')),
-                          's2': plyvel.DB(os.path.join(model_dir, 'td-s2.db')),
-                          's3': plyvel.DB(os.path.join(model_dir, 'td-s3.db')),
-                          'b12': plyvel.DB(os.path.join(model_dir, 'td-b12.db')),
-                          'b13': plyvel.DB(os.path.join(model_dir, 'td-b13.db')),
-                          'b23': plyvel.DB(os.path.join(model_dir, 'td-b23.db')),
-                          't123': plyvel.DB(os.path.join(model_dir, 'td-t123.db'))}
-
-        self._broad_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'tb-s1.db')),
-                           's2': plyvel.DB(os.path.join(model_dir, 'tb-s2.db')),
-                           's3': plyvel.DB(os.path.join(model_dir, 'tb-s3.db')),
-                           'b12': plyvel.DB(os.path.join(model_dir, 'tb-b12.db')),
-                           'b13': plyvel.DB(os.path.join(model_dir, 'tb-b13.db')),
-                           'b23': plyvel.DB(os.path.join(model_dir, 'tb-b23.db')),
-                           't123': plyvel.DB(os.path.join(model_dir, 'tb-t123.db'))}
-        self._single_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'b-s1.db')),
-                            's2': plyvel.DB(os.path.join(model_dir, 'b-s2.db')),
-                            'b12': plyvel.DB(os.path.join(model_dir, 'b-b12.db'))}
-        self._fre_db = plyvel.DB(os.path.join(model_dir, 'fre.db'))
+        # self._deep_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'td-s1.db')),
+        #                   's2': plyvel.DB(os.path.join(model_dir, 'td-s2.db')),
+        #                   's3': plyvel.DB(os.path.join(model_dir, 'td-s3.db')),
+        #                   'b12': plyvel.DB(os.path.join(model_dir, 'td-b12.db')),
+        #                   'b13': plyvel.DB(os.path.join(model_dir, 'td-b13.db')),
+        #                   'b23': plyvel.DB(os.path.join(model_dir, 'td-b23.db')),
+        #                   't123': plyvel.DB(os.path.join(model_dir, 'td-t123.db'))}
+        #
+        # self._broad_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'tb-s1.db')),
+        #                    's2': plyvel.DB(os.path.join(model_dir, 'tb-s2.db')),
+        #                    's3': plyvel.DB(os.path.join(model_dir, 'tb-s3.db')),
+        #                    'b12': plyvel.DB(os.path.join(model_dir, 'tb-b12.db')),
+        #                    'b13': plyvel.DB(os.path.join(model_dir, 'tb-b13.db')),
+        #                    'b23': plyvel.DB(os.path.join(model_dir, 'tb-b23.db')),
+        #                    't123': plyvel.DB(os.path.join(model_dir, 'tb-t123.db'))}
+        # self._single_dbs = {'s1': plyvel.DB(os.path.join(model_dir, 'b-s1.db')),
+        #                     's2': plyvel.DB(os.path.join(model_dir, 'b-s2.db')),
+        #                     'b12': plyvel.DB(os.path.join(model_dir, 'b-b12.db'))}
+        # self._fre_db = plyvel.DB(os.path.join(model_dir, 'fre.db'))
 
         if FAST_STAT_DB_FLAG == 1:
             self._redis_db = redis.StrictRedis(host='localhost', port=6379, db=0)
@@ -158,31 +158,33 @@ class ProbModel:
             elif FAST_STAT_DB_FLAG == 2:
                 if value_fast_db != 0:
                     return value_fast_db
-        key = key.encode("utf-8")
-        # start_time = time.time()
-        if db_type == "fre":
-            value = self._fre_db.get(key)
         else:
-            db_sub_type = db_type[2:]
-            db_main_type = db_type[0]
-            if db_main_type == 's':
-                value = self._single_dbs[db_sub_type].get(key)
-            elif db_main_type == 'd':
-                value = self._deep_dbs[db_sub_type].get(key)
-            elif db_main_type == 'b':
-                value = self._broad_dbs[db_sub_type].get(key)
-            else:
-                value = None
-        # end_time = time.time()
+            return 0
+        # key = key.encode("utf-8")
+        # # start_time = time.time()
+        # if db_type == "fre":
+        #     value = self._fre_db.get(key)
+        # else:
+        #     db_sub_type = db_type[2:]
+        #     db_main_type = db_type[0]
+        #     if db_main_type == 's':
+        #         value = self._single_dbs[db_sub_type].get(key)
+        #     elif db_main_type == 'd':
+        #         value = self._deep_dbs[db_sub_type].get(key)
+        #     elif db_main_type == 'b':
+        #         value = self._broad_dbs[db_sub_type].get(key)
+        #     else:
+        #         value = None
+        # # end_time = time.time()
+        # #
+        # # self._all_db_timer += end_time - start_time
+        # # self._all_db_times += 1
         #
-        # self._all_db_timer += end_time - start_time
-        # self._all_db_times += 1
-
-        if value is None:
-            score = 0
-        else:
-            score = b_2_i(value)
-        return score
+        # if value is None:
+        #     score = 0
+        # else:
+        #     score = b_2_i(value)
+        # return score
 
     def _search_smooth_value(self, key, rets):
         self._prob_cpp_db.search(key, rets)
