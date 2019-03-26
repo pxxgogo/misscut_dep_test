@@ -21,9 +21,9 @@ SMOOTH_VALUE_THRESHOLD = 80000
 
 
 def replace_special_symbols(sentence):
-    modified_sentence = NUMBER_RE_COMPILOR.sub(NUMBER_TAG, sentence)
-    modified_sentence = LETTER_RE_COMPILOR.sub(LETTER_TAG, modified_sentence)
-    return modified_sentence
+    # modified_sentence = NUMBER_RE_COMPILOR.sub(NUMBER_TAG, sentence)
+    # modified_sentence = LETTER_RE_COMPILOR.sub(LETTER_TAG, modified_sentence)
+    return sentence
 
 
 def i_2_b(digit):
